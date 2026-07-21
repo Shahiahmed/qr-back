@@ -65,7 +65,12 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    /*
+     * The server clock runs on CEST, so leaving this at UTC would stamp every
+     * order five hours off from the shift that took it. Kazakhstan has one
+     * business timezone; set it here rather than converting at every read.
+     */
+    'timezone' => env('APP_TIMEZONE', 'Asia/Almaty'),
 
     /*
     |--------------------------------------------------------------------------
