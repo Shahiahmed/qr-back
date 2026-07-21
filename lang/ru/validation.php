@@ -9,7 +9,7 @@ return [
     'required' => 'Заполните это поле.',
     'email' => 'Введите корректный email.',
     'confirmed' => 'Пароли не совпадают.',
-    'unique' => 'Этот email уже зарегистрирован.',
+    'unique' => 'Это значение уже занято.',
     'boolean' => 'Недопустимое значение.',
     'string' => 'Значение должно быть текстом.',
 
@@ -26,5 +26,20 @@ return [
      * attribute list stays empty on purpose — a message like «Заполните это
      * поле» reads better next to its own input than one naming the field.
      */
+    /*
+     * `unique` fires for several fields, so the generic message above stays
+     * neutral and each field says what it actually means.
+     */
+    'custom' => [
+        'email' => [
+            'unique' => 'Этот email уже зарегистрирован.',
+        ],
+        'slug' => [
+            'unique' => 'Это короткое имя уже занято, выберите другое.',
+            'regex' => 'Только латиница, цифры и дефис.',
+            'reserved' => 'Это имя занято сервисом, выберите другое.',
+        ],
+    ],
+
     'attributes' => [],
 ];

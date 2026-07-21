@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\EstablishmentController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
@@ -25,4 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Who am I — the front end calls this to restore state on a reload.
     Route::get('/user', fn (Request $request) => UserResource::make($request->user()))
         ->name('user');
+
+    // Venues. Every route is scoped to the signed-in owner.
+    Route::apiResource('establishments', EstablishmentController::class);
 });
