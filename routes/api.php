@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DishController;
 use App\Http\Controllers\EstablishmentController;
+use App\Http\Controllers\MenuCategoryController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
@@ -29,4 +31,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Venues. Every route is scoped to the signed-in owner.
     Route::apiResource('establishments', EstablishmentController::class);
+
+    /*
+     * Menu, nested under its venue so the tenant is always in the URL and
+     * cannot be forgotten when scoping.
+     */
+    Route::prefix('establishments/{establishment}')->group(function () {
+        Route::get('menu', [MenuCategoryController::class, 'index'])->name('menu.index');
+
+        Route::post('categories', [MenuCategoryController::class, 'store']);
+        Route::patch('categories/{category}', [MenuCategoryController::class, 'update']);
+        Route::delete('categories/{category}', [MenuCategoryController::class, 'destroy']);
+
+        Route::post('dishes', [DishController::class, 'store']);
+        Route::patch('dishes/{dish}', [DishController::class, 'update']);
+        Route::delete('dishes/{dish}', [DishController::class, 'destroy']);
+    });
 });

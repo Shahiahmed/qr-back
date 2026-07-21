@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * The tenant. Menu data will be scoped by `establishment_id`.
@@ -36,5 +37,15 @@ class Establishment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function categories(): HasMany
+    {
+        return $this->hasMany(MenuCategory::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function dishes(): HasMany
+    {
+        return $this->hasMany(Dish::class);
     }
 }
