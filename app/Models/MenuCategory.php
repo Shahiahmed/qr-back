@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\InvalidatesPublicMenu;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,7 @@ class MenuCategory extends Model
 {
     /** @use HasFactory<\Database\Factories\MenuCategoryFactory> */
     use HasFactory;
+    use InvalidatesPublicMenu;
 
     protected function casts(): array
     {

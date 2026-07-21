@@ -4,10 +4,17 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DishController;
 use App\Http\Controllers\EstablishmentController;
 use App\Http\Controllers\MenuCategoryController;
+use App\Http\Controllers\PublicMenuController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+/*
+ * The guest menu — what the QR code on the table points at. No auth, no
+ * session; cached whole and dropped when an owner edits anything.
+ */
+Route::get('/public/menu/{slug}', PublicMenuController::class)->name('public.menu');
 
 /*
  * Auth for the admin panel. Sanctum runs in SPA mode, so these rely on the

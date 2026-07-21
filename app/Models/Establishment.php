@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PublicMenu;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -33,6 +34,25 @@ class Establishment extends Model
         'sanctum', 'storage', 'assets', 'img', 'menu', 'm', 'p',
         'about', 'contact', 'privacy', 'terms', 'sitemap', 'robots',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(function (self $establishment) {
+            /*
+             * A renamed venue leaves its old address cached, which would keep
+             * answering after the slug moved — clear both.
+             */
+            $original = $establishment->getOriginal('slug');
+
+            if ($original && $original !== $establishment->slug) {
+                PublicMenu::forget($original);
+            }
+
+            PublicMenu::forget($establishment->slug);
+        });
+
+        static::deleted(fn (self $establishment) => PublicMenu::forget($establishment->slug));
+    }
 
     public function user(): BelongsTo
     {
