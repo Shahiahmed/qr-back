@@ -19,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
          * stateful domain need the session and CSRF middleware.
          */
         $middleware->statefulApi();
+
+        // Validation and auth messages go straight into the UI, so they have
+        // to come back in the language the visitor is reading.
+        $middleware->api(prepend: [\App\Http\Middleware\SetLocale::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
