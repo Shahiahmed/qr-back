@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\CurrentUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\UpdatePasswordController;
 use App\Http\Controllers\DishController;
 use App\Http\Controllers\EstablishmentController;
 use App\Http\Controllers\MenuCategoryController;
@@ -32,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
     Route::get('/user', CurrentUserController::class)->name('user');
+    Route::put('/user/password', UpdatePasswordController::class)->name('user.password');
 
     // Venues. Every route is scoped to the signed-in owner.
     Route::apiResource('establishments', EstablishmentController::class);
