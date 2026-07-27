@@ -33,6 +33,8 @@ class Establishment extends Model
         'login', 'register', 'logout', 'dashboard', 'panel',
         'sanctum', 'storage', 'assets', 'img', 'menu', 'm', 'p',
         'about', 'contact', 'privacy', 'terms', 'sitemap', 'robots',
+        // Built-in sample menu served statically at /m/demo.
+        'demo',
     ];
 
     protected static function booted(): void
