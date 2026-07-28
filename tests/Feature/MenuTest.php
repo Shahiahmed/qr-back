@@ -152,6 +152,61 @@ it('removes the dishes when a category goes', function () {
     expect(Dish::count())->toBe(0);
 });
 
+it('reorders sections to match the ids sent', function () {
+    $first = MenuCategory::factory()->for($this->venue)->create(['name_ru' => 'Первое', 'position' => 1]);
+    $second = MenuCategory::factory()->for($this->venue)->create(['name_ru' => 'Второе', 'position' => 2]);
+    $third = MenuCategory::factory()->for($this->venue)->create(['name_ru' => 'Третье', 'position' => 3]);
+
+    $names = collect(
+        $this->patchJson("/api/establishments/{$this->venue->id}/categories/reorder", [
+            'ids' => [$third->id, $first->id, $second->id],
+        ])->assertOk()->json('data')
+    )->pluck('name_ru')->all();
+
+    expect($names)->toBe(['Третье', 'Первое', 'Второе']);
+    expect($third->fresh()->position)->toBe(1);
+});
+
+it('ignores a reorder id from another tenant', function () {
+    $mine = MenuCategory::factory()->for($this->venue)->create(['position' => 1]);
+    $foreignCategory = MenuCategory::factory()->create(); // another owner's venue
+
+    $this->patchJson("/api/establishments/{$this->venue->id}/categories/reorder", [
+        'ids' => [$foreignCategory->id, $mine->id],
+    ])->assertOk();
+
+    // The stray id must not have been repositioned into my venue's order.
+    expect($foreignCategory->fresh()->position)->toBe($foreignCategory->position);
+});
+
+it('will not reorder another owner\'s sections', function () {
+    $foreign = Establishment::factory()->create();
+    $foreignCategory = MenuCategory::factory()->for($foreign)->create();
+
+    $this->patchJson("/api/establishments/{$foreign->id}/categories/reorder", [
+        'ids' => [$foreignCategory->id],
+    ])->assertNotFound();
+});
+
+it('saves the guest-facing header and colour theme', function () {
+    $this->patchJson("/api/establishments/{$this->venue->id}", [
+        'wifi_ssid' => 'Guest_Net',
+        'wifi_password' => 'open2024',
+        'instagram_url' => 'instagram.com/venue',
+        'theme' => 'forest',
+    ])->assertOk()
+        ->assertJsonPath('data.wifi_ssid', 'Guest_Net')
+        ->assertJsonPath('data.theme', 'forest')
+        // A bare handle is stored as a full URL so the guest link works.
+        ->assertJsonPath('data.instagram_url', 'https://instagram.com/venue');
+});
+
+it('rejects an unknown colour theme', function () {
+    $this->patchJson("/api/establishments/{$this->venue->id}", [
+        'theme' => 'neon-chaos',
+    ])->assertStatus(422)->assertJsonValidationErrors('theme');
+});
+
 it('keeps the menu closed to guests', function () {
     auth()->logout();
 

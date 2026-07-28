@@ -12,7 +12,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * The tenant. Menu data will be scoped by `establishment_id`.
  */
-#[Fillable(['name', 'slug', 'currency', 'default_locale', 'address', 'phone'])]
+#[Fillable([
+    'name', 'slug', 'currency', 'default_locale', 'address', 'phone',
+    'wifi_ssid', 'wifi_password', 'instagram_url', 'facebook_url', 'tiktok_url',
+    'theme',
+])]
 class Establishment extends Model
 {
     /** @use HasFactory<\Database\Factories\EstablishmentFactory> */
@@ -23,6 +27,16 @@ class Establishment extends Model
 
     /** Menu languages. `kk` is Kazakh — `kz` is a country, not a language. */
     public const LOCALES = ['ru', 'kk'];
+
+    /**
+     * Colour presets for the guest menu. Only the accent family changes per
+     * theme — the background and text stay put — so no choice can make the menu
+     * unreadable. Keys must match `MENU_THEMES` on the front end.
+     */
+    public const THEMES = [
+        'classic', 'graphite', 'forest', 'ocean',
+        'berry', 'sand', 'rose', 'midnight',
+    ];
 
     /**
      * Slugs the public router needs for itself. Without this a venue could

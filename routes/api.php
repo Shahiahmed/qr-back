@@ -48,6 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('menu/starter', ApplyMenuStarterController::class)->name('menu.starter');
 
         Route::post('categories', [MenuCategoryController::class, 'store']);
+        // Before the {category} route so "reorder" isn't taken for an id.
+        Route::patch('categories/reorder', [MenuCategoryController::class, 'reorder']);
         Route::patch('categories/{category}', [MenuCategoryController::class, 'update']);
         Route::delete('categories/{category}', [MenuCategoryController::class, 'destroy']);
 

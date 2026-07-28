@@ -69,6 +69,13 @@ class PublicMenu
             'default_locale' => $establishment->default_locale,
             'address' => $establishment->address,
             'phone' => $establishment->phone,
+            // Header the guest sees above the menu, plus the colour theme.
+            'wifi_ssid' => $establishment->wifi_ssid,
+            'wifi_password' => $establishment->wifi_password,
+            'instagram_url' => $establishment->instagram_url,
+            'facebook_url' => $establishment->facebook_url,
+            'tiktok_url' => $establishment->tiktok_url,
+            'theme' => $establishment->theme,
             'categories' => $establishment->categories
                 ->map(fn ($category) => [
                     'id' => $category->id,

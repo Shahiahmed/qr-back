@@ -24,6 +24,13 @@ class EstablishmentResource extends JsonResource
             'default_locale' => $this->default_locale,
             'address' => $this->address,
             'phone' => $this->phone,
+            // Guest-facing header + colour theme.
+            'wifi_ssid' => $this->wifi_ssid,
+            'wifi_password' => $this->wifi_password,
+            'instagram_url' => $this->instagram_url,
+            'facebook_url' => $this->facebook_url,
+            'tiktok_url' => $this->tiktok_url,
+            'theme' => $this->theme,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Menu\ReorderCategoriesRequest;
 use App\Http\Requests\Menu\StoreCategoryRequest;
 use App\Http\Requests\Menu\UpdateCategoryRequest;
 use App\Http\Resources\MenuCategoryResource;
@@ -9,6 +10,7 @@ use App\Models\Establishment;
 use App\Models\MenuCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class MenuCategoryController extends Controller
 {
@@ -39,6 +41,41 @@ class MenuCategoryController extends Controller
         ]);
 
         return MenuCategoryResource::make($category)->response()->setStatusCode(201);
+    }
+
+    /**
+     * Set the section order from a list of ids. Ids that don't belong to this
+     * venue are skipped, so a tampered payload can't touch another tenant.
+     *
+     * Positions are saved through the model (not a bulk query) so the
+     * public-menu cache is dropped by the model event — guests see the new
+     * order on the next scan.
+     */
+    public function reorder(
+        ReorderCategoriesRequest $request,
+        Establishment $establishment,
+    ): AnonymousResourceCollection {
+        $this->authorizeOwner($establishment);
+
+        $categories = $establishment->categories()->get()->keyBy('id');
+
+        DB::transaction(function () use ($request, $categories) {
+            $position = 1;
+
+            foreach ($request->validated()['ids'] as $id) {
+                $category = $categories->get($id);
+
+                if ($category) {
+                    $category->update(['position' => $position]);
+                    $position++;
+                }
+            }
+        });
+
+        // categories() is ordered by position, so this reflects the new order.
+        return MenuCategoryResource::collection(
+            $establishment->categories()->with('dishes')->get(),
+        );
     }
 
     public function update(
