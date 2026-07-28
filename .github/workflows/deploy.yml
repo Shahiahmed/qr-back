@@ -26,8 +26,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          # Fail the job if any command in the script returns non-zero.
-          script_stop: true
+          # Run via `bash` so a missing +x bit on deploy.sh can't fail the job
+          # (Permission denied / exit 126). deploy.sh has its own `set -euo
+          # pipefail`, so any failing step still propagates a non-zero exit.
           script: |
             cd /var/www/qr-menu
-            ./deploy.sh
+            bash deploy.sh
