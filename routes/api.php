@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\CurrentUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\UpdatePasswordController;
+use App\Http\Controllers\ApplyMenuStarterController;
 use App\Http\Controllers\DishController;
 use App\Http\Controllers\EstablishmentController;
 use App\Http\Controllers\MenuCategoryController;
@@ -44,6 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
      */
     Route::prefix('establishments/{establishment}')->group(function () {
         Route::get('menu', [MenuCategoryController::class, 'index'])->name('menu.index');
+        Route::post('menu/starter', ApplyMenuStarterController::class)->name('menu.starter');
 
         Route::post('categories', [MenuCategoryController::class, 'store']);
         Route::patch('categories/{category}', [MenuCategoryController::class, 'update']);

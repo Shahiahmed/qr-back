@@ -6,6 +6,7 @@ use App\Http\Requests\StoreEstablishmentRequest;
 use App\Http\Requests\UpdateEstablishmentRequest;
 use App\Http\Resources\EstablishmentResource;
 use App\Models\Establishment;
+use App\Support\MenuStarter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -29,6 +30,9 @@ class EstablishmentController extends Controller
         $establishment = $request->user()
             ->establishments()
             ->create($request->validated());
+
+        // Every new venue opens with a bilingual skeleton the owner can edit.
+        MenuStarter::apply($establishment);
 
         return EstablishmentResource::make($establishment)
             ->response()
