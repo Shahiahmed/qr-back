@@ -15,6 +15,8 @@
 /auth.json
 /node_modules
 /public/build
+/public/css/filament
+/public/js/filament
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage

@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'name', 'slug', 'currency', 'default_locale', 'address', 'phone',
     'wifi_ssid', 'wifi_password', 'instagram_url', 'facebook_url', 'tiktok_url',
     'theme',
+    // Set only by VenueImage (upload/remove), never from the update form.
+    'cover_path', 'logo_path',
 ])]
 class Establishment extends Model
 {

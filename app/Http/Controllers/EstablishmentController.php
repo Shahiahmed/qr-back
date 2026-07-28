@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreEstablishmentRequest;
+use App\Http\Requests\StoreVenueImageRequest;
 use App\Http\Requests\UpdateEstablishmentRequest;
 use App\Http\Resources\EstablishmentResource;
 use App\Models\Establishment;
 use App\Support\MenuStarter;
+use App\Support\VenueImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -64,6 +66,35 @@ class EstablishmentController extends Controller
         $establishment->delete();
 
         return response()->json(status: 204);
+    }
+
+    /**
+     * Upload (or replace) the venue's cover or logo. Multipart, not JSON —
+     * the processed image is downscaled to WebP before it lands on disk.
+     */
+    public function storeImage(
+        StoreVenueImageRequest $request,
+        Establishment $establishment,
+    ): EstablishmentResource {
+        $this->authorizeOwner($request, $establishment);
+
+        VenueImage::store($establishment, $request->validated('kind'), $request->file('file'));
+
+        return EstablishmentResource::make($establishment->fresh());
+    }
+
+    /** Remove one image slot (cover or logo) and its file. */
+    public function destroyImage(
+        Request $request,
+        Establishment $establishment,
+        string $kind,
+    ): EstablishmentResource {
+        $this->authorizeOwner($request, $establishment);
+        abort_unless(array_key_exists($kind, VenueImage::KINDS), 404);
+
+        VenueImage::remove($establishment, $kind);
+
+        return EstablishmentResource::make($establishment->fresh());
     }
 
     /**

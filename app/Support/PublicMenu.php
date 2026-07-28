@@ -76,6 +76,9 @@ class PublicMenu
             'facebook_url' => $establishment->facebook_url,
             'tiktok_url' => $establishment->tiktok_url,
             'theme' => $establishment->theme,
+            // Owner-uploaded imagery; null when never set.
+            'cover_url' => VenueImage::url($establishment->cover_path),
+            'logo_url' => VenueImage::url($establishment->logo_path),
             'categories' => $establishment->categories
                 ->map(fn ($category) => [
                     'id' => $category->id,

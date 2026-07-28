@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Establishment;
+use App\Support\VenueImage;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -31,6 +32,9 @@ class EstablishmentResource extends JsonResource
             'facebook_url' => $this->facebook_url,
             'tiktok_url' => $this->tiktok_url,
             'theme' => $this->theme,
+            // Public URLs built from the stored path (null when unset).
+            'cover_url' => VenueImage::url($this->cover_path),
+            'logo_url' => VenueImage::url($this->logo_path),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

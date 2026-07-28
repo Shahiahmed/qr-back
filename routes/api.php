@@ -39,6 +39,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Venues. Every route is scoped to the signed-in owner.
     Route::apiResource('establishments', EstablishmentController::class);
 
+    // Cover / logo upload. Multipart; images are downscaled to WebP server-side.
+    Route::post('establishments/{establishment}/image', [EstablishmentController::class, 'storeImage']);
+    Route::delete('establishments/{establishment}/image/{kind}', [EstablishmentController::class, 'destroyImage']);
+
     /*
      * Menu, nested under its venue so the tenant is always in the URL and
      * cannot be forgotten when scoping.

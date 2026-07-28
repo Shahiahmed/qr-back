@@ -24,10 +24,22 @@ echo "→ database"
 # The schema belongs to this project, so migrating on deploy is correct here.
 php artisan migrate --force
 
+echo "→ storage link"
+# public/storage → storage/app/public, so uploaded covers/logos are servable.
+# Idempotent; already-linked is fine, so don't let it trip `set -e`.
+php artisan storage:link || true
+
+echo "→ admin panel assets"
+# Filament serves compiled CSS/JS from public/. Republish on every deploy so
+# the panel doesn't 404 its own assets after a Filament upgrade.
+php artisan filament:assets
+
 echo "→ caches"
 php artisan config:cache
 php artisan route:cache
-# No view:cache: this is a JSON API and ships no Blade templates.
+# The API ships no Blade of its own, but Filament does — filament:optimize
+# caches its components + Blade icons (the panel's equivalent of view:cache).
+php artisan filament:optimize
 
 echo "→ permissions"
 chown -R www-data:www-data "$PROJECT_DIR"

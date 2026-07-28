@@ -16,6 +16,13 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
+     * Public site (Next.js) that renders the guest menu. Used by the admin
+     * panel to link to a venue's live `/m/{slug}` page. Config, not env(), so
+     * it survives config:cache.
+     */
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
