@@ -1,0 +1,33 @@
+name: Deploy backend
+
+# Auto-deploy: every push to main SSHes into the server and runs deploy.sh
+# (git reset --hard origin/main → composer → migrate → cache → fpm reload).
+# workflow_dispatch also lets you re-deploy by hand from the Actions tab.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never let two deploys run at once — deploy.sh resets the working tree, so
+# overlapping runs could fight over the same checkout. Queue instead of cancel:
+# every pushed commit still gets deployed, in order.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run deploy.sh over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          # Fail the job if any command in the script returns non-zero.
+          script_stop: true
+          script: |
+            cd /var/www/qr-menu
+            ./deploy.sh
