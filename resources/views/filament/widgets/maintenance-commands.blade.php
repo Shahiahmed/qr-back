@@ -54,19 +54,19 @@
                 <span wire:loading wire:target="runClearCache">Выполняется…</span>
             </x-filament::button>
 
-            @if ($this->canSeedPlans())
-                <x-filament::button
-                    color="warning"
-                    icon="heroicon-o-sparkles"
-                    wire:click="runSeedPlans"
-                    wire:confirm="Создать стартовые тарифы (Бесплатный · На 6 месяцев · На год)?"
-                    wire:target="runSeedPlans"
-                    wire:loading.attr="disabled"
-                >
-                    <span wire:loading.remove wire:target="runSeedPlans">Засеять тарифы</span>
-                    <span wire:loading wire:target="runSeedPlans">Выполняется…</span>
-                </x-filament::button>
-            @endif
+            <x-filament::button
+                color="warning"
+                icon="heroicon-o-sparkles"
+                wire:click="runSeedPlans"
+                wire:confirm="{{ $this->canSeedPlans()
+                    ? 'Создать стартовые тарифы (Бесплатный · На 6 месяцев · На год)?'
+                    : 'В каталоге уже есть тарифы. Сидер ПЕРЕЗАПИШЕТ цены дефолтных тарифов (Бесплатный · На 6 месяцев · На год) на значения по умолчанию. Ваши правки цен слетят. Продолжить?' }}"
+                wire:target="runSeedPlans"
+                wire:loading.attr="disabled"
+            >
+                <span wire:loading.remove wire:target="runSeedPlans">Засеять тарифы</span>
+                <span wire:loading wire:target="runSeedPlans">Выполняется…</span>
+            </x-filament::button>
         </div>
 
         {{-- Output of the last command --}}
@@ -80,7 +80,7 @@
         @endif
 
         <p class="mt-4 text-xs text-gray-400 dark:text-gray-500">
-            «Засеять тарифы» показывается только на пустом каталоге — чтобы не затереть цены, изменённые в «Тарифах».
+            «Засеять тарифы» на непустом каталоге перезапишет цены дефолтных тарифов на значения по умолчанию — запускайте только если хотите сбросить их.
         </p>
     </x-filament::section>
 </x-filament-widgets::widget>

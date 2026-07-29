@@ -49,27 +49,18 @@ class MaintenanceCommands extends Widget
     }
 
     /**
-     * Seed the default plans. Guarded to run only on an empty catalogue: the
-     * seeder is updateOrCreate and would otherwise reset admin-edited prices
-     * back to defaults (CLAUDE.md §11).
+     * Seed the default plans. Runs whatever the catalogue state — but the button
+     * carries a loud confirm when plans already exist, because the seeder is
+     * updateOrCreate and resets the *default* tiers' prices back to placeholders
+     * (CLAUDE.md §7/§11). `canSeedPlans()` only drives that warning copy now.
      */
     public function runSeedPlans(): void
     {
-        if (Plan::query()->exists()) {
-            Notification::make()
-                ->title('Тарифы уже есть — сидер пропущен')
-                ->body('Чтобы не затереть цены, засев доступен только на пустом каталоге.')
-                ->warning()
-                ->send();
-
-            return;
-        }
-
         $this->run(
             'db:seed',
             'db:seed --class=PlanSeeder',
             ['--class' => 'PlanSeeder', '--force' => true],
-            'Стартовые тарифы созданы',
+            'Стартовые тарифы засеяны',
         );
     }
 
@@ -167,7 +158,7 @@ class MaintenanceCommands extends Widget
             : ['label' => 'GD WebP', 'value' => 'Нет — загрузка фото упадёт', 'color' => 'danger'];
     }
 
-    /** Whether the plan seeder button should be offered (empty catalogue only). */
+    /** True on an empty catalogue — picks the seeder button's confirm copy. */
     public function canSeedPlans(): bool
     {
         return ! Plan::query()->exists();

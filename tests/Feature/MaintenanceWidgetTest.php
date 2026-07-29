@@ -16,7 +16,7 @@ it('renders the maintenance widget for an admin', function () {
     Livewire::test(MaintenanceCommands::class)->assertOk();
 });
 
-it('exposes four health checks and offers seeding only on an empty catalogue', function () {
+it('exposes four health checks and flags an empty catalogue for the seed confirm', function () {
     $this->actingAs(User::factory()->create(['is_admin' => true]));
 
     $widget = new MaintenanceCommands();
@@ -47,14 +47,17 @@ it('refuses to run a command for a non-admin', function () {
         ->assertForbidden();
 });
 
-it('skips plan seeding when plans already exist', function () {
+it('seeds the default plans even when others already exist', function () {
     $this->actingAs(User::factory()->create(['is_admin' => true]));
-    Plan::factory()->create();
+    // A pre-existing unrelated plan — the seeder keys on name_ru, so it adds the
+    // three defaults alongside it rather than skipping (the loud confirm is in
+    // the UI; the action itself always runs).
+    Plan::factory()->create(['name_ru' => 'Свой тариф']);
 
     Livewire::test(MaintenanceCommands::class)
         ->call('runSeedPlans')
         ->assertOk();
 
-    // The guard kept the catalogue at exactly the one pre-existing plan.
-    expect(Plan::query()->count())->toBe(1);
+    expect(Plan::query()->where('name_ru', 'На год')->exists())->toBeTrue()
+        ->and(Plan::query()->where('name_ru', 'Свой тариф')->exists())->toBeTrue();
 });
