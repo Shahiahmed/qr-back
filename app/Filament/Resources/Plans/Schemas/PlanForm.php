@@ -53,8 +53,12 @@ class PlanForm
                             ->maxValue(100)
                             ->suffix('%'),
                         Select::make('period')
-                            ->label('Период')
-                            ->options(['month' => 'В месяц', 'year' => 'В год'])
+                            ->label('Срок доступа')
+                            ->options([
+                                'month' => 'На месяц',
+                                'halfyear' => 'На 6 месяцев',
+                                'year' => 'На год',
+                            ])
                             ->default('month')
                             ->required(),
                     ]),

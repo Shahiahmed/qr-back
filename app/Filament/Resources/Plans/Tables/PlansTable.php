@@ -30,8 +30,12 @@ class PlansTable
                         : null)
                     ->sortable(),
                 TextColumn::make('period')
-                    ->label('Период')
-                    ->formatStateUsing(fn (string $state): string => $state === 'year' ? 'год' : 'месяц')
+                    ->label('Срок')
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'year' => 'год',
+                        'halfyear' => '6 мес',
+                        default => 'месяц',
+                    })
                     ->badge(),
                 TextColumn::make('max_establishments')
                     ->label('Заведений')

@@ -59,7 +59,7 @@
                     color="warning"
                     icon="heroicon-o-sparkles"
                     wire:click="runSeedPlans"
-                    wire:confirm="Создать стартовые тарифы (Бесплатный · Стандарт · Премиум)?"
+                    wire:confirm="Создать стартовые тарифы (Бесплатный · На 6 месяцев · На год)?"
                     wire:target="runSeedPlans"
                     wire:loading.attr="disabled"
                 >

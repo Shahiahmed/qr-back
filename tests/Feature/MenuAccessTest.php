@@ -86,11 +86,18 @@ it('sets the subscription window by plan period', function () {
     expect($subscription->ends_at->toDateString())
         ->toBe(Carbon::now()->addMonth()->toDateString());
 
-    $yearly = Plan::factory()->create(['period' => 'year']);
-    $request2 = SubscriptionRequest::factory()->for($owner)->create(['plan_id' => $yearly->id]);
+    $halfyear = Plan::factory()->create(['period' => 'halfyear']);
+    $request2 = SubscriptionRequest::factory()->for($owner)->create(['plan_id' => $halfyear->id]);
     $subscription2 = SubscriptionService::approve($request2);
 
     expect($subscription2->ends_at->toDateString())
+        ->toBe(Carbon::now()->addMonths(6)->toDateString());
+
+    $yearly = Plan::factory()->create(['period' => 'year']);
+    $request3 = SubscriptionRequest::factory()->for($owner)->create(['plan_id' => $yearly->id]);
+    $subscription3 = SubscriptionService::approve($request3);
+
+    expect($subscription3->ends_at->toDateString())
         ->toBe(Carbon::now()->addYear()->toDateString());
 });
 

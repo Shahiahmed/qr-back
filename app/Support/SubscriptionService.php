@@ -36,9 +36,11 @@ class SubscriptionService
                 ->update(['status' => Subscription::STATUS_CANCELLED]);
 
             $starts = Carbon::now();
-            $ends = $plan?->period === 'year'
-                ? $starts->copy()->addYear()
-                : $starts->copy()->addMonth();
+            $ends = match ($plan?->period) {
+                'year' => $starts->copy()->addYear(),
+                'halfyear' => $starts->copy()->addMonths(6),
+                default => $starts->copy()->addMonth(),
+            };
 
             // forceCreate / forceFill: Subscription and the review columns are
             // intentionally not fillable (never writable from HTTP), but this is

@@ -22,8 +22,8 @@ class Plan extends Model
     /** @use HasFactory<\Database\Factories\PlanFactory> */
     use HasFactory;
 
-    /** Billing periods offered. */
-    public const PERIODS = ['month', 'year'];
+    /** Billing periods offered. Tiers differ only by duration on one menu. */
+    public const PERIODS = ['month', 'halfyear', 'year'];
 
     protected function casts(): array
     {
