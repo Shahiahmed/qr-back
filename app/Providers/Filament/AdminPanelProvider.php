@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\MaintenanceCommands;
 use App\Filament\Widgets\PlatformStats;
 use App\Filament\Widgets\VenuesChart;
 use App\Http\Middleware\SetAdminLocale;
@@ -43,6 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 PlatformStats::class,
                 VenuesChart::class,
+                MaintenanceCommands::class,
                 AccountWidget::class,
             ])
             ->middleware([
