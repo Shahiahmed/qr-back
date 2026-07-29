@@ -45,8 +45,10 @@ class VenueImage
 
         $binary = self::encode($file, $kind);
 
-        // A logo keeps its transparency; a webp extension regardless of source.
-        $path = "venues/{$establishment->id}/{$kind}-".Str::random(16).'.webp';
+        // Under the venue's own folder, one subfolder per slot, so the storage
+        // tree reads clearly. Webp extension regardless of source; a logo keeps
+        // its transparency.
+        $path = "{$establishment->storageFolder()}/{$kind}/{$kind}-".Str::random(16).'.webp';
         Storage::disk(self::DISK)->put($path, $binary);
 
         self::deleteFile($establishment->{$column});

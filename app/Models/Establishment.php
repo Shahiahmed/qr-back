@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * The tenant. Menu data will be scoped by `establishment_id`.
@@ -28,6 +30,9 @@ class Establishment extends Model
 
     /** Days a brand-new venue is publicly available before it needs a plan. */
     public const TRIAL_DAYS = 7;
+
+    /** Where every image of this venue lives. */
+    private const DISK = 'public';
 
     /** Currencies offered in the panel. */
     public const CURRENCIES = ['KZT', 'USD', 'RUB'];
@@ -75,6 +80,23 @@ class Establishment extends Model
             }
         });
 
+        // Give the venue its own folder the moment it exists, so the storage
+        // tree reads clearly (one folder per venue) even before the first photo.
+        static::created(function (self $establishment) {
+            Storage::disk(self::DISK)->makeDirectory($establishment->storageFolder());
+        });
+
+        // A rename changes the folder name (it carries the slug). Move the whole
+        // tree and rewrite every stored path in one go, so a venue's files never
+        // end up split across an old and a new folder.
+        static::updating(function (self $establishment) {
+            $original = $establishment->getOriginal('slug');
+
+            if ($original !== null && $original !== $establishment->slug) {
+                $establishment->relocateStorage($original);
+            }
+        });
+
         static::saved(function (self $establishment) {
             /*
              * A renamed venue leaves its old address cached, which would keep
@@ -90,6 +112,54 @@ class Establishment extends Model
         });
 
         static::deleted(fn (self $establishment) => PublicMenu::forget($establishment->slug));
+    }
+
+    /**
+     * This venue's own folder on the public disk. Everything the venue owns
+     * lives under here — `cover/`, `logo/`, `dishes/{id}/` — so the storage tree
+     * reads at a glance. Named `{id}-{slug}`: the id keeps it collision-proof and
+     * stable, the slug makes it human-readable when browsing files.
+     */
+    public function storageFolder(): string
+    {
+        return "venues/{$this->id}-{$this->slug}";
+    }
+
+    /**
+     * Move this venue's whole folder from its old slug to the new one and
+     * rewrite every stored path to match. Called from `updating` (before the row
+     * is written), so the model's own columns are mutated in place and ride the
+     * same save; dish paths are updated directly. Keeps all of a venue's files
+     * under a single, correctly-named folder after a rename.
+     */
+    private function relocateStorage(string $oldSlug): void
+    {
+        $disk = Storage::disk(self::DISK);
+        $from = "venues/{$this->id}-{$oldSlug}";
+        $to = $this->storageFolder();
+
+        if ($from === $to) {
+            return;
+        }
+
+        // Local disk: rename the whole subtree in one filesystem move.
+        if ($disk->exists($from)) {
+            @rename($disk->path($from), $disk->path($to));
+        }
+
+        $rebase = fn (?string $path) => $path
+            ? Str::replaceStart("{$from}/", "{$to}/", $path)
+            : $path;
+
+        $this->cover_path = $rebase($this->cover_path);
+        $this->logo_path = $rebase($this->logo_path);
+
+        // Dishes carry their own paths. Update them straight in the DB without
+        // firing model events — the menu cache is already cleared by this save.
+        $this->dishes()->whereNotNull('image_path')->get(['id', 'image_path'])
+            ->each(fn (Dish $dish) => Dish::query()
+                ->whereKey($dish->id)
+                ->update(['image_path' => $rebase($dish->image_path)]));
     }
 
     public function user(): BelongsTo

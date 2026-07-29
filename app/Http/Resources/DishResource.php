@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Dish;
+use App\Support\DishImage;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,6 +29,7 @@ class DishResource extends JsonResource
             'position' => $this->position,
             'is_visible' => $this->is_visible,
             'is_available' => $this->is_available,
+            'image_url' => DishImage::url($this->image_path),
         ];
     }
 }

@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Menu\StoreDishRequest;
 use App\Http\Requests\Menu\UpdateDishRequest;
+use App\Http\Requests\StoreDishImageRequest;
 use App\Http\Resources\DishResource;
 use App\Models\Dish;
 use App\Models\Establishment;
+use App\Support\DishImage;
 use Illuminate\Http\JsonResponse;
 
 class DishController extends Controller
@@ -51,5 +53,29 @@ class DishController extends Controller
         $dish->delete();
 
         return response()->json(status: 204);
+    }
+
+    /** Upload (or replace) the dish photo. Multipart; cropped + WebP server-side. */
+    public function storeImage(
+        StoreDishImageRequest $request,
+        Establishment $establishment,
+        Dish $dish,
+    ): DishResource {
+        $this->authorizeOwner($establishment);
+        $this->authorizeBelongsTo($dish, $establishment);
+
+        DishImage::store($dish, $request->file('file'));
+
+        return DishResource::make($dish->fresh());
+    }
+
+    public function destroyImage(Establishment $establishment, Dish $dish): DishResource
+    {
+        $this->authorizeOwner($establishment);
+        $this->authorizeBelongsTo($dish, $establishment);
+
+        DishImage::remove($dish);
+
+        return DishResource::make($dish->fresh());
     }
 }

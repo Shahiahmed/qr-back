@@ -75,5 +75,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('dishes', [DishController::class, 'store']);
         Route::patch('dishes/{dish}', [DishController::class, 'update']);
         Route::delete('dishes/{dish}', [DishController::class, 'destroy']);
+        // Dish photo. Multipart; centre-cropped to a square WebP server-side.
+        Route::post('dishes/{dish}/image', [DishController::class, 'storeImage']);
+        Route::delete('dishes/{dish}/image', [DishController::class, 'destroyImage']);
     });
 });

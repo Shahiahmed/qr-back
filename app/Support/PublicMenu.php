@@ -103,6 +103,7 @@ class PublicMenu
                             'description_kk' => $dish->description_kk,
                             'price' => $dish->price,
                             'is_available' => $dish->is_available,
+                            'image_url' => DishImage::url($dish->image_path),
                         ])
                         ->values()
                         ->all(),
