@@ -55,8 +55,8 @@ class PublicMenu
             ->with([
                 'categories' => fn ($query) => $query->where('is_visible', true),
                 'categories.dishes' => fn ($query) => $query->where('is_visible', true),
-                // Owner's live grant → this menu's access window, baked below.
-                'user.currentSubscription',
+                // This menu's own live grant → its access window, baked below.
+                'currentSubscription',
             ])
             ->first();
 

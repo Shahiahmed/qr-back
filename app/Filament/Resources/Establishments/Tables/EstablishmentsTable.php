@@ -17,10 +17,10 @@ class EstablishmentsTable
     public static function configure(Table $table): Table
     {
         return $table
-            // Counts + owner's grant in one query — no N+1 across the list.
+            // Counts + each venue's own grant in one query — no N+1 across the list.
             ->modifyQueryUsing(fn (Builder $query) => $query
                 ->withCount(['categories', 'dishes'])
-                ->with('user.currentSubscription'))
+                ->with('currentSubscription'))
             ->columns([
                 TextColumn::make('name')
                     ->label('Заведение')

@@ -41,13 +41,39 @@ it('lets an active subscription override the per-menu trial', function () {
 
     // Year plan → the window should stretch far past the 7-day trial.
     $plan = Plan::factory()->create(['period' => 'year']);
-    $request = SubscriptionRequest::factory()->for($owner)->create(['plan_id' => $plan->id]);
+    $request = SubscriptionRequest::factory()->for($owner)->create([
+        'establishment_id' => $venue->id,
+        'plan_id' => $plan->id,
+    ]);
     SubscriptionService::approve($request);
 
-    $venue->refresh()->load('user.currentSubscription');
+    $venue->refresh()->load('currentSubscription');
 
     expect($venue->accessSource())->toBe('subscription')
         ->and($venue->daysLeft())->toBeGreaterThan(300);
+});
+
+it('does not extend a second menu when only the first is subscribed', function () {
+    // The bug this feature fixes: a per-menu grant must not leak to sibling menus.
+    $owner = User::factory()->create();
+    $subscribed = Establishment::factory()->for($owner)->create(['slug' => 'paid-menu']);
+    $sibling = Establishment::factory()->for($owner)->create(['slug' => 'free-menu']);
+
+    $plan = Plan::factory()->create(['period' => 'year']);
+    $request = SubscriptionRequest::factory()->for($owner)->create([
+        'establishment_id' => $subscribed->id,
+        'plan_id' => $plan->id,
+    ]);
+    SubscriptionService::approve($request);
+
+    $subscribed->refresh()->load('currentSubscription');
+    $sibling->refresh()->load('currentSubscription');
+
+    // Paid menu → a year; the sibling stays on its own 7-day trial.
+    expect($subscribed->accessSource())->toBe('subscription')
+        ->and($subscribed->daysLeft())->toBeGreaterThan(300)
+        ->and($sibling->accessSource())->toBe('trial')
+        ->and($sibling->daysLeft())->toBeLessThanOrEqual(7);
 });
 
 it('sets the subscription window by plan period', function () {
@@ -117,7 +143,10 @@ it('drops the owner\'s menu caches when a subscription is approved', function ()
     expect(Cache::has(PublicMenu::cacheKey('revived-venue')))->toBeTrue();
 
     $plan = Plan::factory()->create(['period' => 'year']);
-    $request = SubscriptionRequest::factory()->for($owner)->create(['plan_id' => $plan->id]);
+    $request = SubscriptionRequest::factory()->for($owner)->create([
+        'establishment_id' => $venue->id,
+        'plan_id' => $plan->id,
+    ]);
     SubscriptionService::approve($request);
 
     // The extended window takes effect immediately, not after the day-long cache.

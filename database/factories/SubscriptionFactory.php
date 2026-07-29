@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Establishment;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
@@ -22,6 +23,7 @@ class SubscriptionFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
+            'establishment_id' => Establishment::factory(),
             'plan_id' => Plan::factory(),
             'status' => Subscription::STATUS_ACTIVE,
             'starts_at' => Carbon::now(),

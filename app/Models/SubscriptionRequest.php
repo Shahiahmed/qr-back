@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Subscription. Contact/note are owner-supplied; status/reviewed_* are set by
  * the admin flow, so they are deliberately kept out of #[Fillable].
  */
-#[Fillable(['plan_id', 'contact_phone', 'note'])]
+#[Fillable(['establishment_id', 'plan_id', 'contact_phone', 'note'])]
 class SubscriptionRequest extends Model
 {
     /** @use HasFactory<\Database\Factories\SubscriptionRequestFactory> */
@@ -46,6 +46,12 @@ class SubscriptionRequest extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** The menu this request asks to cover — subscriptions are per menu. */
+    public function establishment(): BelongsTo
+    {
+        return $this->belongsTo(Establishment::class);
     }
 
     public function plan(): BelongsTo

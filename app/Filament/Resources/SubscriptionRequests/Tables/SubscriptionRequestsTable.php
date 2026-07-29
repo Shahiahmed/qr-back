@@ -28,6 +28,9 @@ class SubscriptionRequestsTable
                     ->label('Владелец')
                     ->description(fn (SubscriptionRequest $r): ?string => $r->user?->email)
                     ->searchable(),
+                TextColumn::make('establishment.name')
+                    ->label('Меню')
+                    ->placeholder('—'),
                 TextColumn::make('plan.name_ru')
                     ->label('Тариф')
                     ->placeholder('—'),
@@ -72,7 +75,7 @@ class SubscriptionRequestsTable
                     ->visible(fn (SubscriptionRequest $r): bool => $r->isPending())
                     ->requiresConfirmation()
                     ->modalHeading('Одобрить заявку?')
-                    ->modalDescription('Владельцу будет выдана подписка, предыдущая активная закроется.')
+                    ->modalDescription('Меню будет выдана подписка, предыдущая активная для этого меню закроется.')
                     ->action(function (SubscriptionRequest $record): void {
                         SubscriptionService::approve($record, auth()->user());
 

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -106,23 +107,43 @@ class Establishment extends Model
         return $this->hasMany(Dish::class);
     }
 
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function subscriptionRequests(): HasMany
+    {
+        return $this->hasMany(SubscriptionRequest::class);
+    }
+
     /**
-     * The owner's live subscription, if any. Prefers the eager-loaded relation
-     * (no N+1 across a list) and falls back to a query for a lone model.
+     * This menu's live grant as an eager-loadable relation — usable in `with()`
+     * to avoid N+1 when a list of venues each needs its own access window.
+     * Filter `isActive()` on read to exclude a grant whose end date has passed.
+     */
+    public function currentSubscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class)
+            ->where('status', Subscription::STATUS_ACTIVE)
+            ->latestOfMany();
+    }
+
+    /**
+     * This menu's live subscription, if any. Reads the eager-loaded relation
+     * when present (no N+1 across a list), lazy-loads otherwise.
      */
     private function liveSubscription(): ?Subscription
     {
-        $sub = $this->relationLoaded('user') && $this->user
-            ? $this->user->currentSubscription
-            : $this->user?->currentSubscription;
+        $sub = $this->currentSubscription;
 
         return $sub && $sub->isActive() ? $sub : null;
     }
 
     /**
-     * When the public menu stops being available. A subscription (account-wide)
-     * wins over the per-menu trial. `null` means no limit — either an
-     * open-ended grant or a venue created before trials existed (grandfathered).
+     * When this menu stops being publicly available. Its own paid grant wins
+     * over its trial. `null` means no limit — either an open-ended grant or a
+     * venue created before trials existed (grandfathered).
      */
     public function accessEndsAt(): ?Carbon
     {

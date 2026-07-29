@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -56,31 +55,13 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(SubscriptionRequest::class);
     }
 
-    /** Subscription grants (active + historical). */
+    /**
+     * Subscription grants (active + historical) across all of this owner's
+     * menus. Each grant covers one menu — the per-menu window lives on
+     * Establishment::currentSubscription, not here.
+     */
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
-    }
-
-    /** The current live subscription, or null on the free tier. */
-    public function activeSubscription(): ?Subscription
-    {
-        return $this->subscriptions()
-            ->where('status', Subscription::STATUS_ACTIVE)
-            ->latest('id')
-            ->first();
-    }
-
-    /**
-     * The active grant as an eager-loadable relation — same row as
-     * activeSubscription(), but usable in `with()` to avoid N+1 when a list of
-     * venues needs each owner's access window. Filter `isActive()` on read to
-     * exclude a grant whose end date has passed.
-     */
-    public function currentSubscription(): HasOne
-    {
-        return $this->hasOne(Subscription::class)
-            ->where('status', Subscription::STATUS_ACTIVE)
-            ->latestOfMany();
     }
 }

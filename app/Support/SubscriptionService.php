@@ -25,9 +25,13 @@ class SubscriptionService
         return DB::transaction(function () use ($request, $reviewer) {
             $user = $request->user;
             $plan = $request->plan;
+            $establishment = $request->establishment;
 
-            // One active grant per owner: retire the previous one first.
-            $user->subscriptions()
+            // One active grant per MENU: retire the previous one for this menu.
+            // (`= null` matches nothing, so a legacy request without a menu
+            // simply retires nothing.)
+            Subscription::query()
+                ->where('establishment_id', $establishment?->id)
                 ->where('status', Subscription::STATUS_ACTIVE)
                 ->update(['status' => Subscription::STATUS_CANCELLED]);
 
@@ -40,6 +44,7 @@ class SubscriptionService
             // intentionally not fillable (never writable from HTTP), but this is
             // the trusted path that owns them.
             $subscription = $user->subscriptions()->forceCreate([
+                'establishment_id' => $establishment?->id,
                 'plan_id' => $plan?->id,
                 'status' => Subscription::STATUS_ACTIVE,
                 'starts_at' => $starts,
@@ -54,13 +59,13 @@ class SubscriptionService
             ])->save();
 
             /*
-             * The new grant lengthens every one of this owner's menu windows.
-             * That window is baked into the cached guest payload, so drop those
-             * caches now — otherwise an expired menu would stay dark until its
-             * day-long cache lapsed on its own.
+             * The new grant lengthens exactly this one menu's window, which is
+             * baked into its cached guest payload — drop that cache now, else an
+             * expired menu would stay dark until its day-long cache lapsed.
              */
-            $user->establishments()->pluck('slug')
-                ->each(fn (string $slug) => PublicMenu::forget($slug));
+            if ($establishment) {
+                PublicMenu::forget($establishment->slug);
+            }
 
             return $subscription;
         });

@@ -57,6 +57,12 @@ class Subscription extends Model
         return $this->belongsTo(User::class);
     }
 
+    /** The single menu this grant pays for — access is billed per menu. */
+    public function establishment(): BelongsTo
+    {
+        return $this->belongsTo(Establishment::class);
+    }
+
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);

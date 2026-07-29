@@ -26,6 +26,11 @@ class SubscriptionRequestResource extends JsonResource
                 'name_ru' => $this->plan?->name_ru,
                 'name_kk' => $this->plan?->name_kk,
             ]),
+            'establishment' => $this->whenLoaded('establishment', fn () => [
+                'id' => $this->establishment?->id,
+                'name' => $this->establishment?->name,
+                'slug' => $this->establishment?->slug,
+            ]),
             'created_at' => $this->created_at?->toIso8601String(),
             'reviewed_at' => $this->reviewed_at?->toIso8601String(),
         ];

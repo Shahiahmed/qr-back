@@ -25,6 +25,9 @@ class SubscriptionsTable
                     ->label('Владелец')
                     ->description(fn (Subscription $r): ?string => $r->user?->email)
                     ->searchable(),
+                TextColumn::make('establishment.name')
+                    ->label('Меню')
+                    ->placeholder('—'),
                 TextColumn::make('plan.name_ru')
                     ->label('Тариф')
                     ->placeholder('—'),

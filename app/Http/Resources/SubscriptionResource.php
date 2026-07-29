@@ -27,6 +27,11 @@ class SubscriptionResource extends JsonResource
             'days_left' => $this->daysLeft(),
             // Full plan card so the cabinet can show what the owner is on.
             'plan' => $this->plan ? PublicPlans::present($this->plan) : null,
+            'establishment' => $this->whenLoaded('establishment', fn () => [
+                'id' => $this->establishment?->id,
+                'name' => $this->establishment?->name,
+                'slug' => $this->establishment?->slug,
+            ]),
         ];
     }
 }
