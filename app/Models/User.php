@@ -48,4 +48,25 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(Establishment::class);
     }
+
+    /** Subscription applications this owner has filed. */
+    public function subscriptionRequests(): HasMany
+    {
+        return $this->hasMany(SubscriptionRequest::class);
+    }
+
+    /** Subscription grants (active + historical). */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /** The current live subscription, or null on the free tier. */
+    public function activeSubscription(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->where('status', Subscription::STATUS_ACTIVE)
+            ->latest('id')
+            ->first();
+    }
 }

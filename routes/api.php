@@ -9,6 +9,8 @@ use App\Http\Controllers\DishController;
 use App\Http\Controllers\EstablishmentController;
 use App\Http\Controllers\MenuCategoryController;
 use App\Http\Controllers\PublicMenuController;
+use App\Http\Controllers\PublicPlansController;
+use App\Http\Controllers\SubscriptionRequestController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,6 +18,11 @@ use Illuminate\Support\Facades\Route;
  * session; cached whole and dropped when an owner edits anything.
  */
 Route::get('/public/menu/{slug}', PublicMenuController::class)->name('public.menu');
+
+/*
+ * Subscription plans shown on the landing. No auth; cached and dropped on edit.
+ */
+Route::get('/plans', PublicPlansController::class)->name('public.plans');
 
 /*
  * Auth for the admin panel. Sanctum runs in SPA mode, so these rely on the
@@ -35,6 +42,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user', CurrentUserController::class)->name('user');
     Route::put('/user/password', UpdatePasswordController::class)->name('user.password');
+
+    /*
+     * Subscription: the owner's current tier and their applications. Approval
+     * happens in the admin panel, not here — this side only files requests.
+     */
+    Route::get('/subscription', [SubscriptionRequestController::class, 'current'])->name('subscription.current');
+    Route::get('/subscription-requests', [SubscriptionRequestController::class, 'index'])->name('subscription-requests.index');
+    Route::post('/subscription-requests', [SubscriptionRequestController::class, 'store'])->name('subscription-requests.store');
 
     // Venues. Every route is scoped to the signed-in owner.
     Route::apiResource('establishments', EstablishmentController::class);
