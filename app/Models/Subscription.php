@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\InvalidatesPublicMenu;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,11 @@ class Subscription extends Model
 {
     /** @use HasFactory<\Database\Factories\SubscriptionFactory> */
     use HasFactory;
+
+    // A grant defines its menu's access window, which is baked into the cached
+    // guest payload — editing/deleting one here (admin panel) must drop that
+    // cache, else the menu keeps its old expiry for up to a day.
+    use InvalidatesPublicMenu;
 
     public const STATUS_ACTIVE = 'active';
     public const STATUS_EXPIRED = 'expired';

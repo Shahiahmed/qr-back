@@ -3,6 +3,13 @@
 namespace App\Filament\Resources\Subscriptions\Tables;
 
 use App\Models\Subscription;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -67,6 +74,46 @@ class SubscriptionsTable
                     ->label('Статус')
                     ->options(self::STATUS_LABELS)
                     ->default(Subscription::STATUS_ACTIVE),
+            ])
+            ->recordActions([
+                // Subscriptions are normally created by the approval flow only;
+                // this manual edit is a staff override (fix a wrong date, close a
+                // grant issued by mistake). Status/ends_at aren't fillable, so we
+                // write them with forceFill — same trusted-context pattern as the
+                // user is_admin toggle. Saving drops the menu's guest cache via
+                // the model's InvalidatesPublicMenu trait.
+                Action::make('edit')
+                    ->label('Изменить')
+                    ->icon('heroicon-o-pencil-square')
+                    ->fillForm(fn (Subscription $record): array => [
+                        'status' => $record->status,
+                        'ends_at' => $record->ends_at,
+                    ])
+                    ->schema([
+                        Select::make('status')
+                            ->label('Статус')
+                            ->options(self::STATUS_LABELS)
+                            ->required(),
+                        DateTimePicker::make('ends_at')
+                            ->label('Окончание доступа')
+                            ->seconds(false)
+                            ->helperText('Пусто = бессрочно.'),
+                    ])
+                    ->action(function (Subscription $record, array $data): void {
+                        $record->forceFill([
+                            'status' => $data['status'],
+                            'ends_at' => $data['ends_at'] ?: null,
+                        ])->save();
+
+                        Notification::make()->title('Подписка обновлена')->success()->send();
+                    }),
+                DeleteAction::make()
+                    ->modalDescription('Удалить подписку? Доступ меню вернётся к пробному сроку (или станет бессрочным, если пробного не было).'),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 }

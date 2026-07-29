@@ -4,6 +4,7 @@ use App\Filament\Resources\Establishments\Pages\ListEstablishments;
 use App\Filament\Resources\Subscriptions\Pages\ListSubscriptions;
 use App\Models\Establishment;
 use App\Models\Plan;
+use App\Models\Subscription;
 use App\Models\SubscriptionRequest;
 use App\Models\User;
 use App\Support\SubscriptionService;
@@ -38,4 +39,38 @@ it('renders the establishments list with the access column', function () {
     Livewire::test(ListEstablishments::class)
         ->assertOk()
         ->assertCanSeeTableRecords(Establishment::all());
+});
+
+it('lets an admin cancel a subscription, releasing the menu', function () {
+    $owner = User::factory()->create();
+    $venue = Establishment::factory()->for($owner)->create();
+    $plan = Plan::factory()->create(['period' => 'year']);
+    $request = SubscriptionRequest::factory()->for($owner)
+        ->create(['plan_id' => $plan->id, 'establishment_id' => $venue->id]);
+    $sub = SubscriptionService::approve($request);
+
+    Livewire::test(ListSubscriptions::class)
+        ->callTableAction('edit', $sub, [
+            'status' => Subscription::STATUS_CANCELLED,
+            'ends_at' => null,
+        ])
+        ->assertHasNoTableActionErrors();
+
+    expect($sub->refresh()->status)->toBe(Subscription::STATUS_CANCELLED)
+        ->and($venue->refresh()->currentSubscription)->toBeNull();
+});
+
+it('lets an admin delete a subscription', function () {
+    $owner = User::factory()->create();
+    $venue = Establishment::factory()->for($owner)->create();
+    $plan = Plan::factory()->create(['period' => 'year']);
+    $request = SubscriptionRequest::factory()->for($owner)
+        ->create(['plan_id' => $plan->id, 'establishment_id' => $venue->id]);
+    $sub = SubscriptionService::approve($request);
+
+    Livewire::test(ListSubscriptions::class)
+        ->callTableAction('delete', $sub)
+        ->assertHasNoTableActionErrors();
+
+    expect(Subscription::find($sub->id))->toBeNull();
 });
