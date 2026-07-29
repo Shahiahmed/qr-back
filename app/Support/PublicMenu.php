@@ -55,6 +55,8 @@ class PublicMenu
             ->with([
                 'categories' => fn ($query) => $query->where('is_visible', true),
                 'categories.dishes' => fn ($query) => $query->where('is_visible', true),
+                // Owner's live grant → this menu's access window, baked below.
+                'user.currentSubscription',
             ])
             ->first();
 
@@ -65,6 +67,14 @@ class PublicMenu
         return [
             'name' => $establishment->name,
             'slug' => $establishment->slug,
+            /*
+             * Absolute expiry timestamp, baked into the cached payload. The
+             * controller compares it to "now" on every request, so a menu goes
+             * dark the moment it lapses even though the cache lives a day. When
+             * a subscription is approved the owner's menu caches are dropped
+             * (SubscriptionService) so the extended window takes effect at once.
+             */
+            'access_ends_at' => $establishment->accessEndsAt()?->toIso8601String(),
             'currency' => $establishment->currency,
             'default_locale' => $establishment->default_locale,
             'address' => $establishment->address,

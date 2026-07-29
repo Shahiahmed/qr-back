@@ -53,6 +53,15 @@ class SubscriptionService
                 'reviewed_by' => $reviewer?->id,
             ])->save();
 
+            /*
+             * The new grant lengthens every one of this owner's menu windows.
+             * That window is baked into the cached guest payload, so drop those
+             * caches now — otherwise an expired menu would stay dark until its
+             * day-long cache lapsed on its own.
+             */
+            $user->establishments()->pluck('slug')
+                ->each(fn (string $slug) => PublicMenu::forget($slug));
+
             return $subscription;
         });
     }

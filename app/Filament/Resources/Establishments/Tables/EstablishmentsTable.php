@@ -17,8 +17,10 @@ class EstablishmentsTable
     public static function configure(Table $table): Table
     {
         return $table
-            // Counts in one query — no N+1 across the list.
-            ->modifyQueryUsing(fn (Builder $query) => $query->withCount(['categories', 'dishes']))
+            // Counts + owner's grant in one query — no N+1 across the list.
+            ->modifyQueryUsing(fn (Builder $query) => $query
+                ->withCount(['categories', 'dishes'])
+                ->with('user.currentSubscription'))
             ->columns([
                 TextColumn::make('name')
                     ->label('Заведение')
@@ -47,6 +49,31 @@ class EstablishmentsTable
                     ->alignRight()
                     ->badge()
                     ->color('success'),
+                TextColumn::make('access')
+                    ->label('Доступ')
+                    ->badge()
+                    ->state(function (Establishment $record): string {
+                        if ($record->isExpired()) {
+                            return 'Истёк';
+                        }
+
+                        $days = $record->daysLeft();
+
+                        if ($days === null) {
+                            return 'Без ограничений';
+                        }
+
+                        $suffix = $record->accessSource() === 'trial' ? ' (проб.)' : '';
+
+                        return $days.' дн.'.$suffix;
+                    })
+                    ->color(fn (Establishment $record): string => match (true) {
+                        $record->isExpired() => 'danger',
+                        $record->accessSource() === 'subscription' => 'success',
+                        $record->accessSource() === 'trial' => 'warning',
+                        default => 'gray',
+                    })
+                    ->description(fn (Establishment $record): ?string => $record->accessEndsAt()?->format('d.m.Y')),
                 TextColumn::make('created_at')
                     ->label('Создано')
                     ->date('d.m.Y')

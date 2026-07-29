@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -68,5 +69,18 @@ class User extends Authenticatable implements FilamentUser
             ->where('status', Subscription::STATUS_ACTIVE)
             ->latest('id')
             ->first();
+    }
+
+    /**
+     * The active grant as an eager-loadable relation — same row as
+     * activeSubscription(), but usable in `with()` to avoid N+1 when a list of
+     * venues needs each owner's access window. Filter `isActive()` on read to
+     * exclude a grant whose end date has passed.
+     */
+    public function currentSubscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class)
+            ->where('status', Subscription::STATUS_ACTIVE)
+            ->latestOfMany();
     }
 }

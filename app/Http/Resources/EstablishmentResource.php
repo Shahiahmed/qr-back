@@ -36,6 +36,12 @@ class EstablishmentResource extends JsonResource
             'cover_url' => VenueImage::url($this->cover_path),
             'logo_url' => VenueImage::url($this->logo_path),
             'created_at' => $this->created_at?->toIso8601String(),
+            // Availability window: when the guest menu stops working, whether it
+            // already has, days remaining, and what governs it (trial vs plan).
+            'access_ends_at' => $this->accessEndsAt()?->toIso8601String(),
+            'access_source' => $this->accessSource(),
+            'is_expired' => $this->isExpired(),
+            'days_left' => $this->daysLeft(),
         ];
     }
 }

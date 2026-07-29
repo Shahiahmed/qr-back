@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * An active or historical subscription grant, attached to the owner account.
@@ -35,6 +36,20 @@ class Subscription extends Model
     {
         return $this->status === self::STATUS_ACTIVE
             && (! $this->ends_at || $this->ends_at->isFuture());
+    }
+
+    /** Whole days until the grant ends; 0 if past, null if open-ended. */
+    public function daysLeft(): ?int
+    {
+        if (! $this->ends_at) {
+            return null;
+        }
+
+        if ($this->ends_at->isPast()) {
+            return 0;
+        }
+
+        return (int) ceil(Carbon::now()->diffInHours($this->ends_at) / 24);
     }
 
     public function user(): BelongsTo
