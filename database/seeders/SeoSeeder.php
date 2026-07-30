@@ -10,8 +10,8 @@ use Illuminate\Database\Seeder;
  * BLANK columns, so re-running never clobbers what an admin later edited in
  * `/admin → SEO` (unlike PlanSeeder, which overwrites by key). `og_image_path`
  * is left untouched on purpose — the OG image is uploaded through the panel,
- * the seeder has no file to point at. `noindex` / `canonical_host` are left to
- * their defaults (canonical falls back to the deploy env on the front).
+ * the seeder has no file to point at. `canonical_host` is left to its default
+ * (canonical falls back to the deploy env on the front).
  *
  * Run MANUALLY on the server (`php artisan db:seed --class=SeoSeeder`), never
  * from deploy.sh — same reasoning as PlanSeeder.

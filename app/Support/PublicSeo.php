@@ -40,8 +40,8 @@ class PublicSeo
         $seo = SeoSetting::current();
 
         return [
-            // Robots + canonical are global, not per-locale.
-            'noindex' => (bool) $seo->noindex,
+            // Canonical host is global, not per-locale. The landing is always
+            // indexable — there is no noindex switch (see SeoSettings page).
             'canonical_host' => self::clean($seo->canonical_host),
             // Absolute URL so the front end can hand it straight to OG/Twitter.
             'og_image_url' => $seo->og_image_path

@@ -12,7 +12,6 @@ it('serves per-locale meta, falling back to null on empty fields', function () {
         'title_ru' => 'QR-меню для ресторанов',
         'description_ru' => 'Меню по QR без приложения',
         'title_kk' => '',              // empty → null (front end falls back)
-        'noindex' => true,
         'canonical_host' => 'qmenu.kz',
     ]);
 
@@ -21,7 +20,6 @@ it('serves per-locale meta, falling back to null on empty fields', function () {
     expect($data['ru']['title'])->toBe('QR-меню для ресторанов')
         ->and($data['ru']['description'])->toBe('Меню по QR без приложения')
         ->and($data['kk']['title'])->toBeNull()
-        ->and($data['noindex'])->toBeTrue()
         ->and($data['canonical_host'])->toBe('qmenu.kz')
         ->and($data['og_image_url'])->toBeNull();
 });
@@ -47,7 +45,6 @@ it('lets an admin edit the settings from the panel', function () {
         ->fillForm([
             'title_ru' => 'Из панели',
             'description_kk' => 'Панельден',
-            'noindex' => false,
         ])
         ->call('save')
         ->assertHasNoFormErrors();

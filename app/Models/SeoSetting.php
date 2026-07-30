@@ -15,17 +15,10 @@ use Illuminate\Database\Eloquent\Model;
     'title_ru', 'title_kk',
     'description_ru', 'description_kk',
     'keywords_ru', 'keywords_kk',
-    'og_image_path', 'noindex', 'canonical_host',
+    'og_image_path', 'canonical_host',
 ])]
 class SeoSetting extends Model
 {
-    protected function casts(): array
-    {
-        return [
-            'noindex' => 'boolean',
-        ];
-    }
-
     /**
      * The one and only settings row, created on first access. Callers get a
      * persisted model they can edit and save.

@@ -7,7 +7,6 @@ use BackedEnum;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
@@ -18,8 +17,10 @@ use Filament\Support\Icons\Heroicon;
 
 /**
  * Admin page to edit the site-wide SEO settings (a singleton). Bilingual
- * title/description/keywords, a shared OG image, plus robots (noindex) and a
- * canonical host override. Saving writes the singleton and drops the public
+ * title/description/keywords, a shared OG image and a canonical host override.
+ * The landing is always indexable — there is deliberately no noindex switch, so
+ * a stray click can never drop the live site out of search. Saving writes the
+ * singleton and drops the public
  * cache; the landing revalidates within the hour without a redeploy.
  *
  * Auto-discovered by AdminPanelProvider (discoverPages). The panel is already
@@ -59,7 +60,7 @@ class SeoSettings extends Page implements HasSchemas
             ->statePath('data')
             ->components([
                 Section::make('Основное')
-                    ->description('Картинка для ссылок в соцсетях и управление индексацией.')
+                    ->description('Картинка для ссылок в соцсетях и канонический домен.')
                     ->columns(2)
                     ->schema([
                         FileUpload::make('og_image_path')
@@ -73,10 +74,6 @@ class SeoSettings extends Page implements HasSchemas
                             ->visibility('public')
                             ->maxSize(4096)
                             ->columnSpanFull(),
-                        Toggle::make('noindex')
-                            ->label('Скрыть сайт от поисковиков (noindex)')
-                            ->helperText('Включайте только для черновиков — иначе сайт пропадёт из поиска.')
-                            ->default(false),
                         TextInput::make('canonical_host')
                             ->label('Канонический домен')
                             ->helperText('Обычно оставьте пустым. Пример: qmenu.kz')
