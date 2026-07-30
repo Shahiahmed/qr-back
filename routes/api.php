@@ -10,6 +10,7 @@ use App\Http\Controllers\EstablishmentController;
 use App\Http\Controllers\MenuCategoryController;
 use App\Http\Controllers\PublicMenuController;
 use App\Http\Controllers\PublicPlansController;
+use App\Http\Controllers\PublicSeoController;
 use App\Http\Controllers\SubscriptionRequestController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,12 @@ Route::get('/public/menu/{slug}', PublicMenuController::class)->name('public.men
  * Subscription plans shown on the landing. No auth; cached and dropped on edit.
  */
 Route::get('/plans', PublicPlansController::class)->name('public.plans');
+
+/*
+ * Site-wide SEO settings for the landing's metadata. No auth; cached and
+ * dropped when the admin saves the settings page in /admin.
+ */
+Route::get('/seo', PublicSeoController::class)->name('public.seo');
 
 /*
  * Auth for the admin panel. Sanctum runs in SPA mode, so these rely on the
