@@ -19,7 +19,8 @@ class PublicMenu
 
     public static function cacheKey(string $slug): string
     {
-        return "public-menu:{$slug}";
+        // v2: stock cover when cover_path is empty (see VenueImage::coverUrl).
+        return "public-menu:v2:{$slug}";
     }
 
     /**
@@ -87,8 +88,8 @@ class PublicMenu
             'tiktok_url' => $establishment->tiktok_url,
             'theme' => $establishment->theme,
             'layout' => $establishment->layout,
-            // Owner-uploaded imagery; null when never set.
-            'cover_url' => VenueImage::url($establishment->cover_path),
+            // Owner upload, or the stock cover so a brand-new menu never looks bare.
+            'cover_url' => VenueImage::coverUrl($establishment->cover_path),
             'logo_url' => VenueImage::url($establishment->logo_path),
             'categories' => $establishment->categories
                 ->map(fn ($category) => [

@@ -36,6 +36,13 @@ class VenueImage
     private const DISK = 'public';
 
     /**
+     * Stock cover shown to guests until the owner uploads their own.
+     * Same Unsplash crop as `/m/demo` — warm restaurant interior.
+     */
+    public const DEFAULT_COVER_URL =
+        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&h=640&q=75&auto=format&fit=crop';
+
+    /**
      * Store a processed image for the venue, replacing any previous one in the
      * same slot, and persist the new path. Returns the stored relative path.
      */
@@ -74,6 +81,15 @@ class VenueImage
     public static function url(?string $path): ?string
     {
         return $path ? Storage::disk(self::DISK)->url($path) : null;
+    }
+
+    /**
+     * Cover the guest sees: owner's upload, or the stock restaurant photo.
+     * The panel still gets `url()` so an empty slot stays empty until they upload.
+     */
+    public static function coverUrl(?string $path): string
+    {
+        return self::url($path) ?? self::DEFAULT_COVER_URL;
     }
 
     /**

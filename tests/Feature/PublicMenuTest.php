@@ -4,6 +4,7 @@ use App\Models\Dish;
 use App\Models\Establishment;
 use App\Models\MenuCategory;
 use App\Support\PublicMenu;
+use App\Support\VenueImage;
 use Illuminate\Support\Facades\Cache;
 
 beforeEach(function () {
@@ -26,7 +27,9 @@ it('serves the menu to a guest with no session at all', function () {
         ->assertOk()
         ->assertJsonPath('data.name', 'Восточный дворик')
         ->assertJsonPath('data.categories.0.name_ru', 'Горячее')
-        ->assertJsonPath('data.categories.0.dishes.0.price', 249000);
+        ->assertJsonPath('data.categories.0.dishes.0.price', 249000)
+        // Brand-new venue has no upload — guests still get the stock cover.
+        ->assertJsonPath('data.cover_url', VenueImage::DEFAULT_COVER_URL);
 
     $this->assertGuest();
 });

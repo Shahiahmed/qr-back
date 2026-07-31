@@ -15,7 +15,13 @@ class VenuesChart extends ChartWidget
 {
     protected ?string $heading = 'Новые заведения за 14 дней';
 
-    protected int|string|array $columnSpan = 'full';
+    /** Half-width on wide screens — a full-row chart was oversized for this metric. */
+    protected int|string|array $columnSpan = [
+        'default' => 'full',
+        'lg' => 1,
+    ];
+
+    protected ?string $maxHeight = '220px';
 
     protected function getData(): array
     {
@@ -24,7 +30,7 @@ class VenuesChart extends ChartWidget
         $counts = Establishment::query()
             ->where('created_at', '>=', $since)
             ->get(['created_at'])
-            ->groupBy(fn (Establishment $e) => $e->created_at->format('Y-m-d'))
+            ->groupBy(fn (Establishment $establishment) => $establishment->created_at->format('Y-m-d'))
             ->map->count();
 
         $days = collect(range(13, 0))->map(fn (int $back) => now()->subDays($back)->startOfDay());
