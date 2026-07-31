@@ -207,6 +207,20 @@ it('rejects an unknown colour theme', function () {
     ])->assertStatus(422)->assertJsonValidationErrors('theme');
 });
 
+it('saves the menu layout preset', function () {
+    $this->patchJson("/api/establishments/{$this->venue->id}", [
+        'layout' => 'grid',
+    ])->assertOk()->assertJsonPath('data.layout', 'grid');
+
+    expect($this->venue->fresh()->layout)->toBe('grid');
+});
+
+it('rejects an unknown menu layout', function () {
+    $this->patchJson("/api/establishments/{$this->venue->id}", [
+        'layout' => 'hologram',
+    ])->assertStatus(422)->assertJsonValidationErrors('layout');
+});
+
 it('keeps the menu closed to guests', function () {
     auth()->logout();
 

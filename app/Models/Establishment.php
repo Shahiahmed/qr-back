@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
 #[Fillable([
     'name', 'slug', 'currency', 'default_locale', 'address', 'phone',
     'wifi_ssid', 'wifi_password', 'instagram_url', 'facebook_url', 'tiktok_url',
-    'theme',
+    'theme', 'layout',
     // Set only by VenueImage (upload/remove), never from the update form.
     'cover_path', 'logo_path',
 ])]
@@ -49,6 +49,14 @@ class Establishment extends Model
         'classic', 'graphite', 'forest', 'ocean',
         'berry', 'sand', 'rose', 'midnight',
     ];
+
+    /**
+     * Menu layout presets — how the guest menu arranges dishes (separate from
+     * the colour `theme`). `classic` is the photo-left card list; `grid` is a
+     * photo-forward two-column grid; `compact` is a dense text-first list. Keys
+     * must match `MENU_LAYOUTS` on the front end.
+     */
+    public const LAYOUTS = ['classic', 'grid', 'compact'];
 
     /**
      * Slugs the public router needs for itself. Without this a venue could

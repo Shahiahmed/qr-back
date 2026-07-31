@@ -32,6 +32,7 @@ class EstablishmentResource extends JsonResource
             'facebook_url' => $this->facebook_url,
             'tiktok_url' => $this->tiktok_url,
             'theme' => $this->theme,
+            'layout' => $this->layout,
             // Public URLs built from the stored path (null when unset).
             'cover_url' => VenueImage::url($this->cover_path),
             'logo_url' => VenueImage::url($this->logo_path),

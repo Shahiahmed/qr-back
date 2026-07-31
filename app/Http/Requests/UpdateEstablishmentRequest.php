@@ -43,6 +43,7 @@ class UpdateEstablishmentRequest extends FormRequest
             'tiktok_url' => ['nullable', 'string', 'url', 'max:255'],
 
             'theme' => ['sometimes', 'nullable', Rule::in(Establishment::THEMES)],
+            'layout' => ['sometimes', 'nullable', Rule::in(Establishment::LAYOUTS)],
         ];
     }
 
