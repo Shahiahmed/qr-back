@@ -215,6 +215,18 @@ it('saves the menu layout preset', function () {
     expect($this->venue->fresh()->layout)->toBe('grid');
 });
 
+it('toggles whether the guest cover shows the logo', function () {
+    $this->patchJson("/api/establishments/{$this->venue->id}", [
+        'show_logo' => false,
+    ])->assertOk()->assertJsonPath('data.show_logo', false);
+
+    expect($this->venue->fresh()->show_logo)->toBeFalse();
+
+    $this->patchJson("/api/establishments/{$this->venue->id}", [
+        'show_logo' => true,
+    ])->assertOk()->assertJsonPath('data.show_logo', true);
+});
+
 it('rejects an unknown menu layout', function () {
     $this->patchJson("/api/establishments/{$this->venue->id}", [
         'layout' => 'hologram',

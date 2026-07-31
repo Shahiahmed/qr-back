@@ -44,6 +44,7 @@ class UpdateEstablishmentRequest extends FormRequest
 
             'theme' => ['sometimes', 'nullable', Rule::in(Establishment::THEMES)],
             'layout' => ['sometimes', 'nullable', Rule::in(Establishment::LAYOUTS)],
+            'show_logo' => ['sometimes', 'boolean'],
         ];
     }
 

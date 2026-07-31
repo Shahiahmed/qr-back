@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
 #[Fillable([
     'name', 'slug', 'currency', 'default_locale', 'address', 'phone',
     'wifi_ssid', 'wifi_password', 'instagram_url', 'facebook_url', 'tiktok_url',
-    'theme', 'layout',
+    'theme', 'layout', 'show_logo',
     // Set only by VenueImage (upload/remove), never from the update form.
     'cover_path', 'logo_path',
 ])]
@@ -75,6 +75,7 @@ class Establishment extends Model
     {
         return [
             'trial_ends_at' => 'datetime',
+            'show_logo' => 'boolean',
         ];
     }
 

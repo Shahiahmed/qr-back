@@ -19,8 +19,8 @@ class PublicMenu
 
     public static function cacheKey(string $slug): string
     {
-        // v2: stock cover when cover_path is empty (see VenueImage::coverUrl).
-        return "public-menu:v2:{$slug}";
+        // v3: show_logo flag for the guest cover.
+        return "public-menu:v3:{$slug}";
     }
 
     /**
@@ -91,6 +91,7 @@ class PublicMenu
             // Owner upload, or the stock cover so a brand-new menu never looks bare.
             'cover_url' => VenueImage::coverUrl($establishment->cover_path),
             'logo_url' => VenueImage::url($establishment->logo_path),
+            'show_logo' => (bool) $establishment->show_logo,
             'categories' => $establishment->categories
                 ->map(fn ($category) => [
                     'id' => $category->id,
