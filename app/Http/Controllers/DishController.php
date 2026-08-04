@@ -10,6 +10,7 @@ use App\Models\Dish;
 use App\Models\Establishment;
 use App\Support\DishImage;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
 
 class DishController extends Controller
 {
@@ -21,11 +22,30 @@ class DishController extends Controller
     ): JsonResponse {
         $this->authorizeOwner($establishment);
 
+        $categoryId = (int) $request->validated('menu_category_id');
+
+        // Free / trial menus cap dishes per section. The editor dims "Add" at the
+        // limit; this is the real gate, and it counts the *target* section (the
+        // dialog lets the owner move a dish between sections before saving).
+        $limit = $establishment->menuLimits()['dishes_per_category'];
+
+        if ($limit !== null) {
+            $count = $establishment->dishes()
+                ->where('menu_category_id', $categoryId)
+                ->count();
+
+            if ($count >= $limit) {
+                throw ValidationException::withMessages([
+                    'menu_category_id' => [__('menu.dish_limit', ['limit' => $limit])],
+                ]);
+            }
+        }
+
         $dish = $establishment->dishes()->create([
             ...$request->validated(),
             'position' => $request->integer('position')
                 ?: (int) $establishment->dishes()
-                    ->where('menu_category_id', $request->integer('menu_category_id'))
+                    ->where('menu_category_id', $categoryId)
                     ->max('position') + 1,
         ]);
 

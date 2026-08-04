@@ -41,6 +41,11 @@ class PlansTable
                     ->label('Заведений')
                     ->placeholder('∞')
                     ->sortable(),
+                // Content caps: sections × dishes-per-section. "∞" when unset.
+                TextColumn::make('menu_caps')
+                    ->label('Лимит меню')
+                    ->state(fn (Plan $r): string => ($r->max_categories ?? '∞').' разд. · '.($r->max_dishes_per_category ?? '∞').' блюд')
+                    ->toggleable(),
                 IconColumn::make('is_active')
                     ->label('Активен')
                     ->boolean(),

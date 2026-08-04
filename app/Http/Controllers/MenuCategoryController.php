@@ -11,6 +11,7 @@ use App\Models\MenuCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class MenuCategoryController extends Controller
 {
@@ -32,6 +33,16 @@ class MenuCategoryController extends Controller
         Establishment $establishment,
     ): JsonResponse {
         $this->authorizeOwner($establishment);
+
+        // Free / trial menus are capped. The editor dims "Add" at the limit, but
+        // this is the real gate — a direct POST must not slip past it.
+        $limit = $establishment->menuLimits()['categories'];
+
+        if ($limit !== null && $establishment->categories()->count() >= $limit) {
+            throw ValidationException::withMessages([
+                'name_ru' => [__('menu.category_limit', ['limit' => $limit])],
+            ]);
+        }
 
         $category = $establishment->categories()->create([
             ...$request->validated(),

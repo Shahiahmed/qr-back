@@ -252,6 +252,24 @@ class Establishment extends Model
         return $end !== null && $end->isPast();
     }
 
+    /**
+     * The content caps that apply to this menu, from its effective plan: a live
+     * paid grant uses that plan's limits, otherwise the free tier's (trial and
+     * free-plan menus alike). `null` in a slot means unlimited — and both are
+     * null when no free plan exists, so an unseeded install enforces nothing.
+     *
+     * @return array{categories: int|null, dishes_per_category: int|null}
+     */
+    public function menuLimits(): array
+    {
+        $plan = $this->liveSubscription()?->plan ?? Plan::freeTier();
+
+        return [
+            'categories' => $plan?->max_categories,
+            'dishes_per_category' => $plan?->max_dishes_per_category,
+        ];
+    }
+
     /** Whole days until access ends; 0 if already expired, null if unlimited. */
     public function daysLeft(): ?int
     {

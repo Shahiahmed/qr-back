@@ -21,8 +21,9 @@ class EstablishmentController extends Controller
         // appear here, and must not be reachable by guessing an id.
         $establishments = $request->user()
             ->establishments()
-            // Each venue's own live grant drives its access window — load once.
-            ->with('currentSubscription')
+            // Each venue's own live grant drives its access window and content
+            // caps — load the grant and its plan once, no N+1 across the list.
+            ->with('currentSubscription.plan')
             ->latest('id')
             ->get();
 

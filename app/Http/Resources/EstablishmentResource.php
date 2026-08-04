@@ -44,6 +44,9 @@ class EstablishmentResource extends JsonResource
             'access_source' => $this->accessSource(),
             'is_expired' => $this->isExpired(),
             'days_left' => $this->daysLeft(),
+            // Content caps from the effective plan (free tier on trial). The menu
+            // editor dims "Add" at the cap; the server enforces it regardless.
+            'menu_limits' => $this->menuLimits(),
         ];
     }
 }

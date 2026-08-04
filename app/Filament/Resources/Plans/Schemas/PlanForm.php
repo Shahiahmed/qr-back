@@ -85,6 +85,18 @@ class PlanForm
                             ->helperText('Пусто = без ограничения.')
                             ->numeric()
                             ->minValue(1),
+                        // Content caps enforced on menu editing (free tier carries
+                        // them; empty = unlimited).
+                        TextInput::make('max_categories')
+                            ->label('Макс. разделов в меню')
+                            ->helperText('Пусто = без ограничения.')
+                            ->numeric()
+                            ->minValue(1),
+                        TextInput::make('max_dishes_per_category')
+                            ->label('Макс. блюд в разделе')
+                            ->helperText('Пусто = без ограничения.')
+                            ->numeric()
+                            ->minValue(1),
                         TextInput::make('sort')
                             ->label('Порядок')
                             ->numeric()

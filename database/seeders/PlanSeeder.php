@@ -19,9 +19,11 @@ class PlanSeeder extends Seeder
 {
     public function run(): void
     {
-        // Every paid tier unlocks the same feature set — the only variable is
-        // duration — so they share this list.
+        // The duration tiers (6 months / year) unlock the same feature set — the
+        // only variable is how long — so they share this list. They lift the free
+        // tier's section/dish caps, so that is spelled out here.
         $fullFeatures = [
+            ['ru' => 'Разделы и блюда без ограничений', 'kk' => 'Бөлімдер мен тағамдар шектеусіз'],
             ['ru' => 'Все функции меню', 'kk' => 'Мәзірдің барлық функциялары'],
             ['ru' => 'QR-коды на столы', 'kk' => 'Үстелдерге QR-кодтар'],
             ['ru' => 'Оформление и логотип', 'kk' => 'Дизайн және логотип'],
@@ -39,10 +41,15 @@ class PlanSeeder extends Seeder
                 'period' => 'month',
                 'features' => [
                     ['ru' => '1 меню на 1 месяц', 'kk' => '1 мәзір 1 айға'],
+                    ['ru' => 'До 3 разделов, 5 блюд в разделе', 'kk' => '3 бөлімге дейін, бөлімде 5 тағам'],
                     ['ru' => 'QR-код на стол', 'kk' => 'Үстелге QR-код'],
-                    ['ru' => 'Все функции меню', 'kk' => 'Мәзірдің барлық функциялары'],
                 ],
                 'max_establishments' => 1,
+                // Content caps for the free tier — enforced server-side. The trial
+                // week shares them (falls back to this plan). Paid tiers leave
+                // these null (unlimited).
+                'max_categories' => 3,
+                'max_dishes_per_category' => 5,
                 'is_active' => true,
                 'is_featured' => false,
                 'sort' => 1,
@@ -74,6 +81,30 @@ class PlanSeeder extends Seeder
                 'is_active' => true,
                 'is_featured' => true, // «популярный» — лучшая цена за меню
                 'sort' => 3,
+            ],
+            [
+                // Bespoke top tier: the client's menu is deployed separately on its
+                // own site (not our constructor), with orders, cart and per-dish
+                // SEO. Those features are not built yet — for now this is a
+                // catalogue entry / sales anchor, activated manually like the rest.
+                'name_ru' => 'Премиум',
+                'name_kk' => 'Премиум',
+                'tagline_ru' => 'Отдельный сайт меню с заказами',
+                'tagline_kk' => 'Тапсырыстары бар жеке мәзір сайты',
+                'price' => 200_000 * 100, // 200 000 ₸ in tiyn — placeholder, editable in /admin
+                'discount_percent' => 0,
+                'period' => 'year',
+                'features' => [
+                    ['ru' => 'Отдельный сайт меню на своём домене', 'kk' => 'Жеке доменде бөлек мәзір сайты'],
+                    ['ru' => 'Приём заказов и корзина', 'kk' => 'Тапсырыстарды қабылдау және себет'],
+                    ['ru' => 'SEO для каждого блюда', 'kk' => 'Әр тағамға SEO'],
+                    ['ru' => 'Разделы и блюда без ограничений', 'kk' => 'Бөлімдер мен тағамдар шектеусіз'],
+                    ['ru' => 'Приоритетная поддержка', 'kk' => 'Басым қолдау'],
+                ],
+                'max_establishments' => 1,
+                'is_active' => true,
+                'is_featured' => false,
+                'sort' => 4,
             ],
         ];
 

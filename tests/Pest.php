@@ -13,5 +13,10 @@ pest()->extend(TestCase::class)
          * like the SPA they are standing in for.
          */
         $this->withHeader('Origin', env('FRONTEND_URL', 'http://localhost:3000'));
+
+        // freeTier() memoises within a request; between tests, drop it so a tier
+        // resolved by one example (and rolled back by RefreshDatabase) cannot
+        // leak content limits into the next.
+        \App\Models\Plan::flushFreeTierMemo();
     })
     ->in('Feature');

@@ -70,6 +70,10 @@ class PublicPlans
                 ->values()
                 ->all(),
             'max_establishments' => $plan->max_establishments,
+            // Content caps (null = unlimited). The free tier carries them; paid
+            // tiers leave them open.
+            'max_categories' => $plan->max_categories,
+            'max_dishes_per_category' => $plan->max_dishes_per_category,
             'is_featured' => $plan->is_featured,
         ];
     }
