@@ -76,8 +76,8 @@ class SeoSettings extends Page implements HasSchemas
                             ->columnSpanFull(),
                         TextInput::make('canonical_host')
                             ->label('Канонический домен')
-                            ->helperText('Обычно оставьте пустым. Пример: qmenu.kz')
-                            ->placeholder('qmenu.kz')
+                            ->helperText('Обычно оставьте пустым. Пример: qr-menu.kz')
+                            ->placeholder('qr-menu.kz')
                             ->maxLength(120),
                     ]),
 

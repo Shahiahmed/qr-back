@@ -31,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('Qmenu · Админка')
+            ->brandName('QR меню · Админка')
             ->colors([
                 'primary' => Color::Amber,
             ])
