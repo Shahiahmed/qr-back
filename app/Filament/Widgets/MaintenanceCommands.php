@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Plan;
+use App\Models\PromoSetting;
 use Filament\Notifications\Notification;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Artisan;
@@ -65,6 +66,21 @@ class MaintenanceCommands extends Widget
     }
 
     /**
+     * Seed the landing promo pop-up's starter copy. Non-destructive — the seeder
+     * fills only blank fields and never flips the `enabled` toggle, so re-running
+     * can't switch a live promo on or overwrite edited text (unlike PlanSeeder).
+     */
+    public function runSeedPromo(): void
+    {
+        $this->run(
+            'db:seed',
+            'db:seed --class=PromoSeeder',
+            ['--class' => 'PromoSeeder', '--force' => true],
+            'Текст акции засеян',
+        );
+    }
+
+    /**
      * Run one whitelisted command, capture its output, notify, and keep the log
      * on screen. Never receives user-supplied command names or arguments.
      */
@@ -108,6 +124,7 @@ class MaintenanceCommands extends Widget
             $this->migrationsCheck(),
             $this->storageLinkCheck(),
             $this->plansCheck(),
+            $this->promoCheck(),
             $this->webpCheck(),
         ];
     }
@@ -149,6 +166,20 @@ class MaintenanceCommands extends Widget
     }
 
     /** @return array{label: string, value: string, color: string} */
+    private function promoCheck(): array
+    {
+        $promo = PromoSetting::current();
+
+        if ($promo->enabled) {
+            return ['label' => 'Акция', 'value' => 'Включена и показывается', 'color' => 'success'];
+        }
+
+        return blank($promo->title_ru) && blank($promo->title_kk)
+            ? ['label' => 'Акция', 'value' => 'Пусто — можно засеять', 'color' => 'warning']
+            : ['label' => 'Акция', 'value' => 'Заполнена, выключена', 'color' => 'gray'];
+    }
+
+    /** @return array{label: string, value: string, color: string} */
     private function webpCheck(): array
     {
         $ok = function_exists('gd_info') && ! empty(gd_info()['WebP Support']);
@@ -162,5 +193,17 @@ class MaintenanceCommands extends Widget
     public function canSeedPlans(): bool
     {
         return ! Plan::query()->exists();
+    }
+
+    /**
+     * True once the promo already has title copy — drives the promo seeder's
+     * confirm text. The seeder is non-destructive either way (blank-only fill),
+     * so a filled promo just gets an informational confirmation.
+     */
+    public function promoHasContent(): bool
+    {
+        $promo = PromoSetting::current();
+
+        return filled($promo->title_ru) || filled($promo->title_kk);
     }
 }

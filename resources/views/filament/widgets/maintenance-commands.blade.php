@@ -67,6 +67,20 @@
                 <span wire:loading.remove wire:target="runSeedPlans">Засеять тарифы</span>
                 <span wire:loading wire:target="runSeedPlans">Выполняется…</span>
             </x-filament::button>
+
+            <x-filament::button
+                color="warning"
+                icon="heroicon-o-megaphone"
+                wire:click="runSeedPromo"
+                wire:confirm="{{ $this->promoHasContent()
+                    ? 'Текст акции уже заполнен. Сидер добавит значения только в ПУСТЫЕ поля — заполненное не тронет и акцию не включит. Продолжить?'
+                    : 'Заполнить текст акции значениями по умолчанию (скидка 30%)? Акция при этом останется выключенной — включите её вручную на странице «Акция».' }}"
+                wire:target="runSeedPromo"
+                wire:loading.attr="disabled"
+            >
+                <span wire:loading.remove wire:target="runSeedPromo">Засеять акцию</span>
+                <span wire:loading wire:target="runSeedPromo">Выполняется…</span>
+            </x-filament::button>
         </div>
 
         {{-- Output of the last command --}}

@@ -2,6 +2,7 @@
 
 use App\Filament\Widgets\MaintenanceCommands;
 use App\Models\Plan;
+use App\Models\PromoSetting;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Livewire\Livewire;
@@ -16,17 +17,36 @@ it('renders the maintenance widget for an admin', function () {
     Livewire::test(MaintenanceCommands::class)->assertOk();
 });
 
-it('exposes four health checks and flags an empty catalogue for the seed confirm', function () {
+it('exposes five health checks and flags an empty catalogue for the seed confirm', function () {
     $this->actingAs(User::factory()->create(['is_admin' => true]));
 
     $widget = new MaintenanceCommands();
 
-    expect($widget->getChecks())->toHaveCount(4)
+    expect($widget->getChecks())->toHaveCount(5)
         ->and($widget->canSeedPlans())->toBeTrue();
 
     Plan::factory()->create();
 
     expect($widget->canSeedPlans())->toBeFalse();
+});
+
+it('seeds the promo copy without enabling it', function () {
+    $this->actingAs(User::factory()->create(['is_admin' => true]));
+
+    $widget = new MaintenanceCommands();
+    expect($widget->promoHasContent())->toBeFalse();
+
+    Livewire::test(MaintenanceCommands::class)
+        ->call('runSeedPromo')
+        ->assertOk();
+
+    $promo = PromoSetting::current();
+
+    expect($promo->title_ru)->not->toBeEmpty()
+        ->and($promo->title_kk)->not->toBeEmpty()
+        // Seeding must never switch a live promo on by itself.
+        ->and($promo->enabled)->toBeFalse()
+        ->and($widget->promoHasContent())->toBeTrue();
 });
 
 it('runs a whitelisted command for an admin', function () {
