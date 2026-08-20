@@ -10,6 +10,7 @@ use App\Http\Controllers\EstablishmentController;
 use App\Http\Controllers\MenuCategoryController;
 use App\Http\Controllers\PublicMenuController;
 use App\Http\Controllers\PublicPlansController;
+use App\Http\Controllers\PublicPromoController;
 use App\Http\Controllers\PublicSeoController;
 use App\Http\Controllers\SubscriptionRequestController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,12 @@ Route::get('/plans', PublicPlansController::class)->name('public.plans');
  * dropped when the admin saves the settings page in /admin.
  */
 Route::get('/seo', PublicSeoController::class)->name('public.seo');
+
+/*
+ * Promo pop-up shown on the landing. No auth; cached and dropped when the admin
+ * saves the promo settings page in /admin.
+ */
+Route::get('/promo', PublicPromoController::class)->name('public.promo');
 
 /*
  * Auth for the admin panel. Sanctum runs in SPA mode, so these rely on the
