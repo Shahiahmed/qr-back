@@ -7,6 +7,8 @@ use App\Http\Resources\SubscriptionRequestResource;
 use App\Http\Resources\SubscriptionResource;
 use App\Models\Establishment;
 use App\Models\SubscriptionRequest;
+use App\Models\User;
+use App\Support\TelegramNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -89,9 +91,37 @@ class SubscriptionRequestController extends Controller
         }
 
         $subscriptionRequest = $user->subscriptionRequests()->create($request->validated());
+        $subscriptionRequest->load(['plan', 'establishment']);
 
-        return SubscriptionRequestResource::make($subscriptionRequest->load(['plan', 'establishment']))
+        // Ping the admin so a new paid request gets picked up quickly — approval
+        // is manual. Best-effort: a gateway hiccup must not fail the submission.
+        TelegramNotifier::notifyAdmin(self::adminMessage($user, $subscriptionRequest));
+
+        return SubscriptionRequestResource::make($subscriptionRequest)
             ->response()
             ->setStatusCode(201);
+    }
+
+    /** Human-readable summary of a fresh request for the admin's Telegram. */
+    private static function adminMessage(User $user, SubscriptionRequest $request): string
+    {
+        $plan = $request->plan;
+        $price = $plan ? number_format($plan->discountedPrice() / 100, 0, '.', ' ').' ₸' : '—';
+
+        $lines = [
+            '🔔 Новая заявка на подписку',
+            'Меню: '.($request->establishment?->name ?? '—'),
+            'Тариф: '.($plan?->name_ru ?? '—').' ('.$price.')',
+            'Клиент: '.$user->name.' ('.$user->email.')',
+            'Телефон: '.($request->contact_phone ?: '—'),
+        ];
+
+        if ($request->note) {
+            $lines[] = 'Комментарий: '.$request->note;
+        }
+
+        $lines[] = 'Одобрить: '.rtrim((string) config('app.url'), '/').'/admin';
+
+        return implode("\n", $lines);
     }
 }

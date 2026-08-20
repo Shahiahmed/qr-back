@@ -6,6 +6,7 @@ use App\Models\Subscription;
 use App\Models\SubscriptionRequest;
 use App\Models\User;
 use App\Support\SubscriptionService;
+use Illuminate\Support\Facades\Http;
 
 it('lets an owner file a request for one of their menus', function () {
     $user = User::factory()->create();
@@ -23,6 +24,72 @@ it('lets an owner file a request for one of their menus', function () {
         ->assertJsonPath('data.status', 'new')
         ->assertJsonPath('data.plan.id', $plan->id)
         ->assertJsonPath('data.establishment.id', $venue->id);
+
+    expect($user->subscriptionRequests()->count())->toBe(1);
+});
+
+it('notifies the admin on Telegram when the bot is configured', function () {
+    config([
+        'services.telegram.bot_token' => '123456:test-token',
+        'services.telegram.admin_chat_id' => '99887766',
+    ]);
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $user = User::factory()->create();
+    $venue = Establishment::factory()->for($user)->create(['name' => 'Дастархан']);
+    $plan = Plan::factory()->create(['name_ru' => 'На год']);
+
+    $this->actingAs($user)
+        ->postJson('/api/subscription-requests', [
+            'establishment_id' => $venue->id,
+            'plan_id' => $plan->id,
+            'contact_phone' => '+7 701 111 22 33',
+        ])
+        ->assertCreated();
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), 'api.telegram.org/bot123456:test-token/sendMessage')
+            && (string) $request['chat_id'] === '99887766'
+            && str_contains($request['text'], 'Дастархан')
+            && str_contains($request['text'], 'На год');
+    });
+});
+
+it('does not call the bot when it is not configured', function () {
+    Http::fake();
+
+    $user = User::factory()->create();
+    $venue = Establishment::factory()->for($user)->create();
+    $plan = Plan::factory()->create();
+
+    $this->actingAs($user)
+        ->postJson('/api/subscription-requests', [
+            'establishment_id' => $venue->id,
+            'plan_id' => $plan->id,
+        ])
+        ->assertCreated();
+
+    Http::assertNothingSent();
+});
+
+it('still creates the request when the Telegram bot fails', function () {
+    config([
+        'services.telegram.bot_token' => '123456:test-token',
+        'services.telegram.admin_chat_id' => '99887766',
+    ]);
+    // Bot API down: the submission must still succeed.
+    Http::fake(['*' => Http::response('nope', 500)]);
+
+    $user = User::factory()->create();
+    $venue = Establishment::factory()->for($user)->create();
+    $plan = Plan::factory()->create();
+
+    $this->actingAs($user)
+        ->postJson('/api/subscription-requests', [
+            'establishment_id' => $venue->id,
+            'plan_id' => $plan->id,
+        ])
+        ->assertCreated();
 
     expect($user->subscriptionRequests()->count())->toBe(1);
 });
