@@ -41,11 +41,16 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
-    // Admin notifications via a Telegram bot (@BotFather).
-    // Absent credentials => notifications silently disabled.
+    // Staff notifications via a Telegram bot (@BotFather). One shared bot:
+    // `admin_chat_id` receives platform notices; each venue binds its own chat
+    // for waiter calls. `bot_username` builds the connect deep link;
+    // `webhook_secret` guards the inbound webhook path. Absent credentials =>
+    // notifications silently disabled.
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'admin_chat_id' => env('TELEGRAM_ADMIN_CHAT_ID'),
+        'bot_username' => env('TELEGRAM_BOT_USERNAME'),
+        'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
 
 ];

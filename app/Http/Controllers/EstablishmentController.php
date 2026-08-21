@@ -101,6 +101,40 @@ class EstablishmentController extends Controller
     }
 
     /**
+     * Start binding a Telegram chat to this venue: mint a one-time token and
+     * return the bot deep link. The owner (or their staff) opens it and presses
+     * Start; the webhook then stores the chat id (see TelegramWebhookController).
+     * Returns 409 when the bot isn't configured on the server.
+     */
+    public function linkTelegram(Request $request, Establishment $establishment): JsonResponse
+    {
+        $this->authorizeOwner($request, $establishment);
+
+        $username = config('services.telegram.bot_username');
+        abort_if(! $username, 409, 'Telegram bot is not configured.');
+
+        $token = $establishment->issueTelegramLinkToken();
+
+        return response()->json([
+            'url' => "https://t.me/{$username}?start={$token}",
+        ]);
+    }
+
+    /** Unbind the Telegram chat — waiter calls stop until reconnected. */
+    public function unlinkTelegram(Request $request, Establishment $establishment): EstablishmentResource
+    {
+        $this->authorizeOwner($request, $establishment);
+
+        // Both columns are out of #[Fillable]; clear them in trusted code only.
+        $establishment->forceFill([
+            'telegram_chat_id' => null,
+            'telegram_link_token' => null,
+        ])->save();
+
+        return EstablishmentResource::make($establishment->fresh());
+    }
+
+    /**
      * 404 rather than 403: confirming that an id exists but belongs to someone
      * else leaks how many venues the service holds.
      */

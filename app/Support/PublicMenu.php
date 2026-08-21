@@ -19,8 +19,8 @@ class PublicMenu
 
     public static function cacheKey(string $slug): string
     {
-        // v3: show_logo flag for the guest cover.
-        return "public-menu:v3:{$slug}";
+        // v4: waiter_call_enabled flag for the guest bottom bar.
+        return "public-menu:v4:{$slug}";
     }
 
     /**
@@ -92,6 +92,8 @@ class PublicMenu
             'cover_url' => VenueImage::coverUrl($establishment->cover_path),
             'logo_url' => VenueImage::url($establishment->logo_path),
             'show_logo' => (bool) $establishment->show_logo,
+            // Show the guest "call waiter" button only when a chat is bound.
+            'waiter_call_enabled' => $establishment->telegramConnected(),
             'categories' => $establishment->categories
                 ->map(fn ($category) => [
                     'id' => $category->id,

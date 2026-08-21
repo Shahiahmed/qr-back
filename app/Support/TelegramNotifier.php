@@ -7,31 +7,51 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Sends plain-text notifications to the platform admin through a Telegram bot
- * (created with @BotFather). No verification or templates needed — just a bot
- * token and the admin's chat id.
+ * Sends plain-text notifications through a Telegram bot (created with
+ * @BotFather). One shared bot serves the whole platform: the admin gets
+ * platform notices, and each venue binds its own chat for staff alerts.
  *
  * Every send is best-effort: it never throws and never blocks a user action for
- * long. When credentials are absent (local, tests, CI) it silently no-ops, so
+ * long. When the bot token is absent (local, tests, CI) it silently no-ops, so
  * nothing external is called unless the server is deliberately configured.
  */
 class TelegramNotifier
 {
-    public static function isConfigured(): bool
+    /** True when a bot token exists — enough to send to any chat id. */
+    public static function hasBot(): bool
     {
-        return (bool) config('services.telegram.bot_token')
-            && (bool) config('services.telegram.admin_chat_id');
+        return (bool) config('services.telegram.bot_token');
     }
 
-    /** Notify the admin. Returns false when unconfigured or the send failed. */
+    /** True when the admin chat is also configured. */
+    public static function isConfigured(): bool
+    {
+        return self::hasBot() && (bool) config('services.telegram.admin_chat_id');
+    }
+
+    /** Notify the platform admin. Returns false when unconfigured or failed. */
     public static function notifyAdmin(string $message): bool
     {
-        if (! self::isConfigured()) {
+        $chatId = config('services.telegram.admin_chat_id');
+
+        if (! $chatId) {
+            return false;
+        }
+
+        return self::notify($chatId, $message);
+    }
+
+    /**
+     * Send a message to an arbitrary chat id (e.g. a venue's bound chat).
+     * Returns false when there is no bot token or the send failed.
+     */
+    public static function notify(int|string $chatId, string $message): bool
+    {
+        if (! self::hasBot()) {
             return false;
         }
 
         $token = config('services.telegram.bot_token');
-        $chatId = config('services.telegram.admin_chat_id');
 
         try {
             $response = Http::timeout(8)
@@ -42,7 +62,7 @@ class TelegramNotifier
                 ]);
 
             if ($response->failed()) {
-                Log::warning('Telegram admin notification rejected', [
+                Log::warning('Telegram notification rejected', [
                     'status' => $response->status(),
                 ]);
 
@@ -52,7 +72,7 @@ class TelegramNotifier
             return true;
         } catch (Throwable $e) {
             // A notification must never break the action that triggered it.
-            Log::warning('Telegram admin notification failed', [
+            Log::warning('Telegram notification failed', [
                 'error' => $e->getMessage(),
             ]);
 

@@ -20,6 +20,15 @@ return Application::configure(basePath: dirname(__DIR__))
          */
         $middleware->statefulApi();
 
+        // Public POSTs that can't carry a session CSRF token: the Telegram
+        // webhook is a server-to-server call, and the guest "call waiter" comes
+        // from the statically-served menu. The webhook is guarded by a path
+        // secret instead; waiter-call is throttled and reason-enumerated.
+        $middleware->validateCsrfTokens(except: [
+            'api/telegram/webhook/*',
+            'api/public/menu/*/waiter-call',
+        ]);
+
         // Validation and auth messages go straight into the UI, so they have
         // to come back in the language the visitor is reading.
         $middleware->api(prepend: [\App\Http\Middleware\SetLocale::class]);

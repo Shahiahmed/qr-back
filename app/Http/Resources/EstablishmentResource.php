@@ -37,6 +37,9 @@ class EstablishmentResource extends JsonResource
             'cover_url' => VenueImage::url($this->cover_path),
             'logo_url' => VenueImage::url($this->logo_path),
             'show_logo' => (bool) $this->show_logo,
+            // Whether a Telegram chat is bound (enables waiter calls). The chat
+            // id and link token are never exposed — only this boolean.
+            'telegram_connected' => $this->telegramConnected(),
             'created_at' => $this->created_at?->toIso8601String(),
             // Availability window: when the guest menu stops working, whether it
             // already has, days remaining, and what governs it (trial vs plan).

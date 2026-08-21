@@ -13,6 +13,8 @@ use App\Http\Controllers\PublicPlansController;
 use App\Http\Controllers\PublicPromoController;
 use App\Http\Controllers\PublicSeoController;
 use App\Http\Controllers\SubscriptionRequestController;
+use App\Http\Controllers\TelegramWebhookController;
+use App\Http\Controllers\WaiterCallController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +22,23 @@ use Illuminate\Support\Facades\Route;
  * session; cached whole and dropped when an owner edits anything.
  */
 Route::get('/public/menu/{slug}', PublicMenuController::class)->name('public.menu');
+
+/*
+ * Guest "call waiter" from the table QR. No auth; throttled per venue and only
+ * answered when the venue has a Telegram chat bound. Best-effort — nothing is
+ * stored (Phase 1).
+ */
+Route::post('/public/menu/{slug}/waiter-call', WaiterCallController::class)
+    ->middleware('throttle:20,1')
+    ->name('public.menu.waiter-call');
+
+/*
+ * Inbound Telegram webhook — how a venue binds its chat via the /start deep
+ * link. No auth/session; the path carries a shared secret. Telegram calls it
+ * server-to-server, so it's outside the SPA CSRF flow.
+ */
+Route::post('/telegram/webhook/{secret}', TelegramWebhookController::class)
+    ->name('telegram.webhook');
 
 /*
  * Subscription plans shown on the landing. No auth; cached and dropped on edit.
@@ -71,6 +90,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Cover / logo upload. Multipart; images are downscaled to WebP server-side.
     Route::post('establishments/{establishment}/image', [EstablishmentController::class, 'storeImage']);
     Route::delete('establishments/{establishment}/image/{kind}', [EstablishmentController::class, 'destroyImage']);
+
+    // Telegram binding for staff notifications: mint the connect deep link / unbind.
+    Route::post('establishments/{establishment}/telegram', [EstablishmentController::class, 'linkTelegram']);
+    Route::delete('establishments/{establishment}/telegram', [EstablishmentController::class, 'unlinkTelegram']);
 
     /*
      * Menu, nested under its venue so the tenant is always in the URL and

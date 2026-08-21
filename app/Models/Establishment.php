@@ -270,6 +270,27 @@ class Establishment extends Model
         ];
     }
 
+    /** True once a Telegram chat is bound — staff notifications can be sent. */
+    public function telegramConnected(): bool
+    {
+        return $this->telegram_chat_id !== null;
+    }
+
+    /**
+     * Mint a fresh one-time token for the connect deep link
+     * (`t.me/<bot>?start=<token>`) and persist it. Written with `forceFill` —
+     * the column is deliberately out of `#[Fillable]`, so only trusted server
+     * code (this call from the owner endpoint) can set it.
+     */
+    public function issueTelegramLinkToken(): string
+    {
+        $token = Str::random(32);
+
+        $this->forceFill(['telegram_link_token' => $token])->save();
+
+        return $token;
+    }
+
     /** Whole days until access ends; 0 if already expired, null if unlimited. */
     public function daysLeft(): ?int
     {
