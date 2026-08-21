@@ -8,6 +8,7 @@ use App\Http\Controllers\ApplyMenuStarterController;
 use App\Http\Controllers\DishController;
 use App\Http\Controllers\EstablishmentController;
 use App\Http\Controllers\MenuCategoryController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PublicMenuController;
 use App\Http\Controllers\PublicPlansController;
 use App\Http\Controllers\PublicPromoController;
@@ -31,6 +32,15 @@ Route::get('/public/menu/{slug}', PublicMenuController::class)->name('public.men
 Route::post('/public/menu/{slug}/waiter-call', WaiterCallController::class)
     ->middleware('throttle:20,1')
     ->name('public.menu.waiter-call');
+
+/*
+ * Guest places an order from the table QR. No auth; throttled per venue and
+ * only answered when the venue has a Telegram chat bound. Prices are read
+ * server-side; nothing is stored (Phase 1) — the order is pushed to the chat.
+ */
+Route::post('/public/menu/{slug}/order', OrderController::class)
+    ->middleware('throttle:60,1')
+    ->name('public.menu.order');
 
 /*
  * Inbound Telegram webhook — how a venue binds its chat via the /start deep

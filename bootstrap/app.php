@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/telegram/webhook/*',
             'api/public/menu/*/waiter-call',
+            'api/public/menu/*/order',
         ]);
 
         // Validation and auth messages go straight into the UI, so they have
