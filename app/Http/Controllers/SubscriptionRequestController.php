@@ -6,6 +6,7 @@ use App\Http\Requests\StoreSubscriptionRequestRequest;
 use App\Http\Resources\SubscriptionRequestResource;
 use App\Http\Resources\SubscriptionResource;
 use App\Models\Establishment;
+use App\Models\Plan;
 use App\Models\SubscriptionRequest;
 use App\Models\User;
 use App\Support\TelegramNotifier;
@@ -91,6 +92,19 @@ class SubscriptionRequestController extends Controller
         }
 
         $subscriptionRequest = $user->subscriptionRequests()->create($request->validated());
+
+        // Snapshot how much of the wallet this request means to spend — capped at
+        // the plan's charge so a discount never exceeds the price. This is the
+        // owner's intent; the real deduction is clamped to the live balance at
+        // approval (so several pending requests can't overdraw the same wallet).
+        $plan = Plan::find($request->validated('plan_id'));
+        $price = (int) ($plan?->discountedPrice() ?? 0);
+        $applied = $price > 0 ? min((int) $user->referral_credit, $price) : 0;
+
+        if ($applied > 0) {
+            $subscriptionRequest->forceFill(['referral_credit_applied' => $applied])->save();
+        }
+
         $subscriptionRequest->load(['plan', 'establishment']);
 
         // Ping the admin so a new paid request gets picked up quickly — approval
@@ -106,7 +120,9 @@ class SubscriptionRequestController extends Controller
     private static function adminMessage(User $user, SubscriptionRequest $request): string
     {
         $plan = $request->plan;
-        $price = $plan ? number_format($plan->discountedPrice() / 100, 0, '.', ' ').' ₸' : '—';
+        $gross = $plan ? (int) $plan->discountedPrice() : 0;
+        $applied = (int) $request->referral_credit_applied;
+        $price = $plan ? self::tenge($gross) : '—';
 
         $lines = [
             '🔔 Новая заявка на подписку',
@@ -116,6 +132,11 @@ class SubscriptionRequestController extends Controller
             'Телефон: '.($request->contact_phone ?: '—'),
         ];
 
+        if ($applied > 0) {
+            $lines[] = 'Реферальная скидка: −'.self::tenge($applied);
+            $lines[] = 'К оплате: '.self::tenge(max(0, $gross - $applied));
+        }
+
         if ($request->note) {
             $lines[] = 'Комментарий: '.$request->note;
         }
@@ -123,5 +144,11 @@ class SubscriptionRequestController extends Controller
         $lines[] = 'Одобрить: '.rtrim((string) config('app.url'), '/').'/admin';
 
         return implode("\n", $lines);
+    }
+
+    /** Format a tiyn amount as a human-readable tenge string. */
+    private static function tenge(int $tiyn): string
+    {
+        return number_format($tiyn / 100, 0, '.', ' ').' ₸';
     }
 }

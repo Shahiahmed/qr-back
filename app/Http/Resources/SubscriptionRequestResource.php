@@ -21,6 +21,8 @@ class SubscriptionRequestResource extends JsonResource
             'status' => $this->status,
             'contact_phone' => $this->contact_phone,
             'note' => $this->note,
+            // Referral discount the owner committed on this request (tiyn).
+            'referral_credit_applied' => (int) $this->referral_credit_applied,
             'plan' => $this->whenLoaded('plan', fn () => [
                 'id' => $this->plan?->id,
                 'name_ru' => $this->plan?->name_ru,

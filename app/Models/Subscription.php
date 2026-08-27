@@ -34,6 +34,7 @@ class Subscription extends Model
         return [
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'referral_credit_applied' => 'integer',
         ];
     }
 

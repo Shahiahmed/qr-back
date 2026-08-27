@@ -35,6 +35,7 @@ class SubscriptionRequest extends Model
     {
         return [
             'reviewed_at' => 'datetime',
+            'referral_credit_applied' => 'integer',
         ];
     }
 

@@ -54,11 +54,21 @@ class SubscriptionService
                 'request_id' => $request->id,
             ]);
 
+            // Spend whatever discount the owner committed on this request, clamped
+            // to their live wallet, and record what actually came off the price.
+            $applied = ReferralService::consume($user, (int) $request->referral_credit_applied);
+            if ($applied > 0) {
+                $subscription->forceFill(['referral_credit_applied' => $applied])->save();
+            }
+
             $request->forceFill([
                 'status' => SubscriptionRequest::STATUS_APPROVED,
                 'reviewed_at' => $starts,
                 'reviewed_by' => $reviewer?->id,
             ])->save();
+
+            // A real (paid) approval is the moment the inviter earns their reward.
+            ReferralService::grantConversionReward($subscription);
 
             /*
              * The new grant lengthens exactly this one menu's window, which is

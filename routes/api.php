@@ -10,6 +10,7 @@ use App\Http\Controllers\EstablishmentController;
 use App\Http\Controllers\MenuCategoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PublicMenuController;
+use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\PublicPlansController;
 use App\Http\Controllers\PublicPromoController;
 use App\Http\Controllers\PublicSeoController;
@@ -93,6 +94,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/subscription', [SubscriptionRequestController::class, 'current'])->name('subscription.current');
     Route::get('/subscription-requests', [SubscriptionRequestController::class, 'index'])->name('subscription-requests.index');
     Route::post('/subscription-requests', [SubscriptionRequestController::class, 'store'])->name('subscription-requests.store');
+
+    // Referral program: the owner's invite code, wallet and invite stats.
+    Route::get('/referral', [ReferralController::class, 'show'])->name('referral.show');
 
     // Venues. Every route is scoped to the signed-in owner.
     Route::apiResource('establishments', EstablishmentController::class);

@@ -25,6 +25,8 @@ class SubscriptionResource extends JsonResource
             // Live state so the cabinet can show a countdown without re-deriving.
             'is_active' => $this->isActive(),
             'days_left' => $this->daysLeft(),
+            // Referral discount that came off this subscription's price (tiyn).
+            'referral_credit_applied' => (int) $this->referral_credit_applied,
             // Full plan card so the cabinet can show what the owner is on.
             'plan' => $this->plan ? PublicPlans::present($this->plan) : null,
             'establishment' => $this->whenLoaded('establishment', fn () => [
