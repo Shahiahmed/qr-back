@@ -32,6 +32,9 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName('QR меню · Админка')
+            // Admin works on a laptop: let the sidebar fold away entirely so
+            // wide tables (subscriptions, venues) get the full viewport.
+            ->sidebarFullyCollapsibleOnDesktop()
             ->colors([
                 'primary' => Color::Amber,
             ])

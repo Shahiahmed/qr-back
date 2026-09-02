@@ -17,17 +17,32 @@ it('renders the maintenance widget for an admin', function () {
     Livewire::test(MaintenanceCommands::class)->assertOk();
 });
 
-it('exposes five health checks and flags an empty catalogue for the seed confirm', function () {
+it('exposes six health checks and flags an empty catalogue for the seed confirm', function () {
     $this->actingAs(User::factory()->create(['is_admin' => true]));
 
     $widget = new MaintenanceCommands();
 
-    expect($widget->getChecks())->toHaveCount(5)
+    expect($widget->getChecks())->toHaveCount(6)
         ->and($widget->canSeedPlans())->toBeTrue();
 
     Plan::factory()->create();
 
     expect($widget->canSeedPlans())->toBeFalse();
+});
+
+it('backfills referral codes for owners created without one', function () {
+    $this->actingAs(User::factory()->create(['is_admin' => true]));
+
+    // An owner whose code was never minted (pre-referral account).
+    $legacy = User::factory()->create();
+    $legacy->forceFill(['referral_code' => null])->save();
+
+    Livewire::test(MaintenanceCommands::class)
+        ->call('runBackfillReferralCodes')
+        ->assertOk()
+        ->assertSet('lastLabel', 'referral:backfill-codes');
+
+    expect($legacy->fresh()->referral_code)->not->toBeNull();
 });
 
 it('seeds the promo copy without enabling it', function () {

@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Plan;
 use App\Models\PromoSetting;
+use App\Models\User;
 use Filament\Notifications\Notification;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Artisan;
@@ -81,6 +82,21 @@ class MaintenanceCommands extends Widget
     }
 
     /**
+     * Mint invite codes for owners who registered before the referral feature
+     * (their `creating` hook never stamped one, so their share link is blank).
+     * Idempotent — accounts that already have a code are untouched.
+     */
+    public function runBackfillReferralCodes(): void
+    {
+        $this->run(
+            'referral:backfill-codes',
+            'referral:backfill-codes',
+            [],
+            'Реферальные коды выданы',
+        );
+    }
+
+    /**
      * Run one whitelisted command, capture its output, notify, and keep the log
      * on screen. Never receives user-supplied command names or arguments.
      */
@@ -125,8 +141,19 @@ class MaintenanceCommands extends Widget
             $this->storageLinkCheck(),
             $this->plansCheck(),
             $this->promoCheck(),
+            $this->referralCodesCheck(),
             $this->webpCheck(),
         ];
+    }
+
+    /** @return array{label: string, value: string, color: string} */
+    private function referralCodesCheck(): array
+    {
+        $missing = User::whereNull('referral_code')->count();
+
+        return $missing === 0
+            ? ['label' => 'Реф. коды', 'value' => 'У всех есть', 'color' => 'success']
+            : ['label' => 'Реф. коды', 'value' => "Без кода: {$missing}", 'color' => 'warning'];
     }
 
     /** @return array{label: string, value: string, color: string} */
