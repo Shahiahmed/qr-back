@@ -28,7 +28,7 @@ class OrderController extends Controller
         // is never exposed in the cache. Expired/hidden menus can't be ordered.
         $establishment = Establishment::query()->where('slug', $slug)->first();
 
-        abort_if($establishment === null || $establishment->isExpired(), 404);
+        abort_if($establishment === null || $establishment->isExpired() || $establishment->isBlocked(), 404);
         abort_unless($establishment->telegramConnected(), 404);
 
         // Throttle per venue so nobody can flood the staff chat. Generous enough

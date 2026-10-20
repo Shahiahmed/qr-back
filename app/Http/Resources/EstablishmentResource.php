@@ -47,6 +47,9 @@ class EstablishmentResource extends JsonResource
             'access_source' => $this->accessSource(),
             'is_expired' => $this->isExpired(),
             'days_left' => $this->daysLeft(),
+            // Platform block from /admin — the owner sees why guests get
+            // "unavailable". The internal reason stays in the panel.
+            'is_blocked' => $this->isBlocked(),
             // Content caps from the effective plan (free tier on trial). The menu
             // editor dims "Add" at the cap; the server enforces it regardless.
             'menu_limits' => $this->menuLimits(),

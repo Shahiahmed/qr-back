@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Establishments\Pages;
 
+use App\Filament\Actions\BlockMenuAction;
 use App\Filament\Actions\ExtendTrialAction;
 use App\Filament\Resources\Establishments\EstablishmentResource;
 use Filament\Actions\DeleteAction;
@@ -15,6 +16,8 @@ class EditEstablishment extends EditRecord
     {
         return [
             ExtendTrialAction::make(),
+            BlockMenuAction::block(),
+            BlockMenuAction::unblock(),
             DeleteAction::make(),
         ];
     }

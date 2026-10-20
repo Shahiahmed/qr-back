@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Establishments\Tables;
 
+use App\Filament\Actions\BlockMenuAction;
 use App\Filament\Actions\ExtendTrialAction;
 use App\Models\Establishment;
 use Filament\Actions\Action;
@@ -11,6 +12,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -51,6 +53,10 @@ class EstablishmentsTable
                     ->label('Доступ')
                     ->badge()
                     ->state(function (Establishment $record): string {
+                        if ($record->isBlocked()) {
+                            return 'Заблокировано';
+                        }
+
                         if ($record->isExpired()) {
                             return 'Истёк';
                         }
@@ -66,12 +72,15 @@ class EstablishmentsTable
                         return $days.' дн.'.$suffix;
                     })
                     ->color(fn (Establishment $record): string => match (true) {
-                        $record->isExpired() => 'danger',
+                        $record->isBlocked(), $record->isExpired() => 'danger',
                         $record->accessSource() === 'subscription' => 'success',
                         $record->accessSource() === 'trial' => 'warning',
                         default => 'gray',
                     })
-                    ->description(fn (Establishment $record): ?string => $record->accessEndsAt()?->format('d.m.Y')),
+                    ->description(fn (Establishment $record): ?string => $record->isBlocked()
+                        ? 'с '.$record->blocked_at->format('d.m.Y')
+                        : $record->accessEndsAt()?->format('d.m.Y'))
+                    ->tooltip(fn (Establishment $record): ?string => $record->blocked_reason),
                 TextColumn::make('theme')
                     ->label('Тема')
                     ->badge()
@@ -84,6 +93,15 @@ class EstablishmentsTable
                     ->toggleable(),
             ])
             ->defaultSort('created_at', 'desc')
+            ->filters([
+                TernaryFilter::make('blocked')
+                    ->label('Блокировка')
+                    ->placeholder('Все')
+                    ->trueLabel('Заблокированные')
+                    ->falseLabel('Активные')
+                    ->nullable()
+                    ->attribute('blocked_at'),
+            ])
             ->recordActions([
                 ActionGroup::make([
                     Action::make('menu')
@@ -94,6 +112,8 @@ class EstablishmentsTable
                         )
                         ->openUrlInNewTab(),
                     ExtendTrialAction::make(),
+                    BlockMenuAction::block(),
+                    BlockMenuAction::unblock(),
                     EditAction::make(),
                 ]),
             ])

@@ -16,6 +16,16 @@ class PublicMenuController extends Controller
         abort_if($menu === null, 404);
 
         /*
+         * Blocked by the platform (/admin). Its own status, not 404, so the
+         * guest page can say "temporarily unavailable" instead of "not found" —
+         * the QR is right, the menu is just switched off. Only the flag leaves
+         * the server, never the menu itself.
+         */
+        if ($menu['is_blocked'] ?? false) {
+            return response()->json(['blocked' => true], 423);
+        }
+
+        /*
          * Expiry is checked live, not baked — the payload is cached for a day
          * but the trial/subscription may lapse inside that day. Comparing the
          * baked absolute timestamp to "now" each request lets the menu go dark
@@ -24,6 +34,8 @@ class PublicMenuController extends Controller
          */
         $endsAt = $menu['access_ends_at'] ?? null;
         abort_if($endsAt !== null && Carbon::parse($endsAt)->isPast(), 404);
+
+        unset($menu['is_blocked']);
 
         return response()->json(['data' => $menu]);
     }

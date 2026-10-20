@@ -77,6 +77,7 @@ class Establishment extends Model
     {
         return [
             'trial_ends_at' => 'datetime',
+            'blocked_at' => 'datetime',
             'show_logo' => 'boolean',
         ];
     }
@@ -245,6 +246,16 @@ class Establishment extends Model
         }
 
         return $this->trial_ends_at !== null ? 'trial' : null;
+    }
+
+    /**
+     * Blocked by the platform from /admin. Independent of the access window: a
+     * paid menu can be blocked too, and unblocking restores whatever window it
+     * had. `blocked_at` is not fillable — only the panel writes it.
+     */
+    public function isBlocked(): bool
+    {
+        return $this->blocked_at !== null;
     }
 
     public function isExpired(): bool

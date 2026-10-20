@@ -19,8 +19,8 @@ class PublicMenu
 
     public static function cacheKey(string $slug): string
     {
-        // v4: waiter_call_enabled flag for the guest bottom bar.
-        return "public-menu:v4:{$slug}";
+        // v5: is_blocked flag (platform block from /admin).
+        return "public-menu:v5:{$slug}";
     }
 
     /**
@@ -76,6 +76,9 @@ class PublicMenu
              * (SubscriptionService) so the extended window takes effect at once.
              */
             'access_ends_at' => $establishment->accessEndsAt()?->toIso8601String(),
+            // Read by the controller only — a blocked menu never ships its body.
+            // Saving the block fires `saved`, which drops this entry at once.
+            'is_blocked' => $establishment->isBlocked(),
             'currency' => $establishment->currency,
             'default_locale' => $establishment->default_locale,
             'address' => $establishment->address,
