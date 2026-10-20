@@ -6,6 +6,7 @@ use App\Filament\Actions\ExtendTrialAction;
 use App\Filament\Resources\Establishments\EstablishmentResource;
 use App\Models\Establishment;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -89,12 +90,14 @@ class ExpiringVenues extends TableWidget
                     }),
             ])
             ->recordActions([
-                ExtendTrialAction::make(),
-                Action::make('open')
-                    ->label('Открыть')
-                    ->icon(Heroicon::OutlinedArrowTopRightOnSquare)
-                    ->color('gray')
-                    ->url(fn (Establishment $record): string => EstablishmentResource::getUrl('edit', ['record' => $record])),
+                // One "⋯" menu: two labelled buttons pushed the row past the card edge.
+                ActionGroup::make([
+                    ExtendTrialAction::make(),
+                    Action::make('open')
+                        ->label('Открыть')
+                        ->icon(Heroicon::OutlinedArrowTopRightOnSquare)
+                        ->url(fn (Establishment $record): string => EstablishmentResource::getUrl('edit', ['record' => $record])),
+                ]),
             ])
             ->emptyStateHeading('Ничего не истекает')
             ->emptyStateDescription('В выбранном периоде у меню не заканчивается доступ.')
