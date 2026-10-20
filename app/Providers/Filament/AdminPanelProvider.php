@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\ExpiringVenues;
 use App\Filament\Widgets\MaintenanceCommands;
 use App\Filament\Widgets\PlatformStats;
 use App\Filament\Widgets\VenuesChart;
@@ -46,6 +47,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 PlatformStats::class,
+                ExpiringVenues::class,
                 VenuesChart::class,
                 MaintenanceCommands::class,
                 AccountWidget::class,

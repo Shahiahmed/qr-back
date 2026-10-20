@@ -13,6 +13,8 @@ use Filament\Widgets\ChartWidget;
  */
 class VenuesChart extends ChartWidget
 {
+    protected static ?int $sort = 3;
+
     protected ?string $heading = 'Новые заведения за 14 дней';
 
     /** Half-width on wide screens — a full-row chart was oversized for this metric. */

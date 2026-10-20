@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Support\PublicMenu;
+use Database\Factories\EstablishmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,7 +27,7 @@ use Illuminate\Support\Str;
 ])]
 class Establishment extends Model
 {
-    /** @use HasFactory<\Database\Factories\EstablishmentFactory> */
+    /** @use HasFactory<EstablishmentFactory> */
     use HasFactory;
 
     /** Days a brand-new venue is publicly available before it needs a plan. */
@@ -268,6 +270,46 @@ class Establishment extends Model
             'categories' => $plan?->max_categories,
             'dishes_per_category' => $plan?->max_dishes_per_category,
         ];
+    }
+
+    /**
+     * SQL twin of accessEndsAt() for filtering/sorting whole lists: the end of
+     * the latest active-status grant, else the trial end. Unlike accessEndsAt()
+     * it keeps a grant whose date has passed — the panel wants "access ended on
+     * X", not the stale trial date behind it.
+     *
+     * @return array{0: string, 1: array<int, string>}
+     */
+    private static function accessEndSql(): array
+    {
+        return [
+            'COALESCE((SELECT s.ends_at FROM subscriptions s'
+                .' WHERE s.establishment_id = establishments.id AND s.status = ?'
+                .' ORDER BY s.id DESC LIMIT 1), establishments.trial_ends_at)',
+            [Subscription::STATUS_ACTIVE],
+        ];
+    }
+
+    /**
+     * Venues whose access ends (or ended) inside [$from, $to]. Open-ended grants
+     * never end, so they are excluded even if a stale trial date falls inside.
+     */
+    public function scopeWhereAccessEndsBetween(Builder $query, Carbon $from, Carbon $to): Builder
+    {
+        [$sql, $bindings] = self::accessEndSql();
+
+        return $query
+            ->whereDoesntHave('subscriptions', fn (Builder $q) => $q
+                ->where('status', Subscription::STATUS_ACTIVE)
+                ->whereNull('ends_at'))
+            ->whereRaw("{$sql} BETWEEN ? AND ?", [...$bindings, $from, $to]);
+    }
+
+    public function scopeOrderByAccessEnd(Builder $query, string $direction = 'asc'): Builder
+    {
+        [$sql, $bindings] = self::accessEndSql();
+
+        return $query->orderByRaw($sql.' '.($direction === 'desc' ? 'desc' : 'asc'), $bindings);
     }
 
     /** True once a Telegram chat is bound — staff notifications can be sent. */

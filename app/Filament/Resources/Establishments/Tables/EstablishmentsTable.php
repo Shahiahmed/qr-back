@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Establishments\Tables;
 
+use App\Filament\Actions\ExtendTrialAction;
 use App\Models\Establishment;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -89,6 +90,7 @@ class EstablishmentsTable
                         fn (Establishment $record): string => rtrim((string) config('app.frontend_url'), '/')."/m/{$record->slug}",
                     )
                     ->openUrlInNewTab(),
+                ExtendTrialAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

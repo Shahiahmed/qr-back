@@ -9,11 +9,14 @@ use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 /**
- * Platform-level counters only: pending subscription requests, owners, venues.
+ * Platform-level counters only: pending subscription requests, owners, venues,
+ * menus about to lose access.
  * Per-venue menu depth (categories / dishes) belongs in the owner cabinet, not here.
  */
 class PlatformStats extends StatsOverviewWidget
 {
+    protected static ?int $sort = 1;
+
     protected ?string $pollingInterval = null;
 
     protected function getStats(): array
@@ -28,6 +31,10 @@ class PlatformStats extends StatsOverviewWidget
             ->whereIn('status', SubscriptionRequest::PENDING)
             ->count();
 
+        $expiringSoon = Establishment::query()
+            ->whereAccessEndsBetween(now(), now()->addDays(7))
+            ->count();
+
         return [
             Stat::make('Заявки на подписку', $pendingRequests)
                 ->description($pendingRequests > 0 ? 'Ждут решения' : 'Новых нет')
@@ -38,6 +45,10 @@ class PlatformStats extends StatsOverviewWidget
                 ->color($newOwners > 0 ? 'success' : 'gray'),
 
             Stat::make('Заведения', Establishment::query()->count()),
+
+            Stat::make('Истекают за 7 дней', $expiringSoon)
+                ->description($expiringSoon > 0 ? 'Пора позвонить владельцам' : 'Никто не истекает')
+                ->color($expiringSoon > 0 ? 'danger' : 'gray'),
         ];
     }
 }
