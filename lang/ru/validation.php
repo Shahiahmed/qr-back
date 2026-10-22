@@ -32,6 +32,10 @@ return [
      * neutral and each field says what it actually means.
      */
     'custom' => [
+        'phone' => [
+            'required' => 'Укажите номер WhatsApp.',
+            'regex' => 'Введите номер полностью, например +7 701 123 45 67.',
+        ],
         'email' => [
             'unique' => 'Этот email уже зарегистрирован.',
         ],

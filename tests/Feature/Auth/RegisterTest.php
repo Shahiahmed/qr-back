@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Hash;
 const VALID = [
     'name' => 'Айгүл Серікова',
     'email' => 'aigul@vostok.kz',
+    'phone' => '+7 (701) 123-45-67',
     'password' => 'ploV-2490-tashkent',
     'password_confirmation' => 'ploV-2490-tashkent',
     // The page reports how long the form was open; see the bot trap below.
@@ -104,4 +105,37 @@ it('rejects a direct API signup that skipped the page', function () {
 it('lets a human through with an empty honeypot after a few seconds', function () {
     $this->postJson('/api/register', [...VALID, 'contact_me_by_fax_only' => '', 'form_time' => 2500])
         ->assertCreated();
+});
+
+it('requires a WhatsApp number so a manager can reach the owner', function () {
+    $payload = VALID;
+    unset($payload['phone']);
+
+    $this->postJson('/api/register', $payload)
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('phone');
+
+    expect(User::count())->toBe(0);
+});
+
+it('stores the phone as bare digits whatever way it was typed', function (string $typed) {
+    $this->postJson('/api/register', [...VALID, 'phone' => $typed])->assertCreated();
+
+    expect(User::firstWhere('email', 'aigul@vostok.kz')->phone)->toBe('77011234567');
+})->with([
+    'international' => '+7 (701) 123-45-67',
+    'local trunk 8' => '8 701 123 45 67',
+    'without code' => '701 123 4567',
+]);
+
+it('rejects a phone that is too short or not a number', function (string $typed) {
+    $this->postJson('/api/register', [...VALID, 'phone' => $typed])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('phone');
+})->with(['+7 701 123', 'позвоните мне', '+1 415 555 0132 99']);
+
+it('returns the phone in the user resource', function () {
+    $this->postJson('/api/register', VALID)
+        ->assertCreated()
+        ->assertJsonPath('data.phone', '77011234567');
 });

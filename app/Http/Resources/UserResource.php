@@ -20,6 +20,7 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            'phone' => $this->phone,
             'avatar' => $this->avatar,
             // Referral wallet: the owner's own invite code and spendable balance
             // (tiyn). The cabinet builds the share link and shows the discount.

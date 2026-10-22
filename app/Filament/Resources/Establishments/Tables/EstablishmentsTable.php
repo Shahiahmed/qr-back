@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Establishments\Tables;
 use App\Filament\Actions\BlockMenuAction;
 use App\Filament\Actions\ExtendTrialAction;
 use App\Models\Establishment;
+use App\Support\Phone;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -30,7 +31,7 @@ class EstablishmentsTable
             // Counts + each venue's own grant in one query — no N+1 across the list.
             ->modifyQueryUsing(fn (Builder $query) => $query
                 ->withCount(['categories', 'dishes'])
-                ->with('currentSubscription'))
+                ->with(['user', 'currentSubscription']))
             ->columns([
                 TextColumn::make('name')
                     ->label('Заведение')
@@ -40,8 +41,11 @@ class EstablishmentsTable
                     ->sortable(),
                 TextColumn::make('user.name')
                     ->label('Владелец')
-                    ->description(fn (Establishment $record) => $record->user?->email)
-                    ->searchable(),
+                    ->description(fn (Establishment $record): ?string => collect([
+                        $record->user?->email,
+                        Phone::format($record->user?->phone),
+                    ])->filter()->implode(' · '))
+                    ->searchable(['name', 'email', 'phone']),
                 TextColumn::make('menu')
                     ->label('Меню')
                     ->state(fn (Establishment $record): string => "{$record->categories_count} разд. · {$record->dishes_count} блюд")
@@ -110,6 +114,13 @@ class EstablishmentsTable
                         ->url(
                             fn (Establishment $record): string => rtrim((string) config('app.frontend_url'), '/')."/m/{$record->slug}",
                         )
+                        ->openUrlInNewTab(),
+                    Action::make('whatsapp')
+                        ->label('Написать в WhatsApp')
+                        ->icon(Heroicon::OutlinedChatBubbleLeftRight)
+                        ->color('success')
+                        ->visible(fn (Establishment $record): bool => filled($record->user?->phone))
+                        ->url(fn (Establishment $record): ?string => Phone::whatsappUrl($record->user?->phone))
                         ->openUrlInNewTab(),
                     ExtendTrialAction::make(),
                     BlockMenuAction::block(),

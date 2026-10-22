@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Support\Phone;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
@@ -25,6 +26,13 @@ class UserForm
                     // Same rule as registration — a case-variant must not slip a duplicate in.
                     ->dehydrateStateUsing(fn (string $state): string => mb_strtolower($state))
                     ->unique(ignoreRecord: true),
+                TextInput::make('phone')
+                    ->label('WhatsApp')
+                    ->tel()
+                    ->placeholder('+7 701 123 45 67')
+                    ->formatStateUsing(fn (?string $state): ?string => Phone::format($state))
+                    ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? Phone::normalize($state) : null)
+                    ->maxLength(20),
                 Toggle::make('is_admin')
                     ->label('Доступ в админку')
                     ->helperText('Даёт вход в эту панель. Выдавать только сотрудникам.'),

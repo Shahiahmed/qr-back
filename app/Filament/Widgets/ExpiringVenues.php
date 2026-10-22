@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Filament\Actions\ExtendTrialAction;
 use App\Filament\Resources\Establishments\EstablishmentResource;
 use App\Models\Establishment;
+use App\Support\Phone;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Support\Icons\Heroicon;
@@ -42,8 +43,13 @@ class ExpiringVenues extends TableWidget
                 TextColumn::make('user.name')
                     ->label('Владелец')
                     ->description(fn (Establishment $record): ?string => $record->user?->email),
+                // The owner's WhatsApp from signup first — the venue's own phone
+                // is optional and often left blank.
                 TextColumn::make('phone')
                     ->label('Телефон')
+                    ->state(fn (Establishment $record): ?string => $record->user?->phone ?? $record->phone)
+                    ->formatStateUsing(fn (?string $state): ?string => Phone::format($state))
+                    ->url(fn (Establishment $record): ?string => Phone::whatsappUrl($record->user?->phone), shouldOpenInNewTab: true)
                     ->placeholder('—')
                     ->copyable(),
                 TextColumn::make('access')

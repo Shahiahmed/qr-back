@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\Phone;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
@@ -29,6 +30,8 @@ class RegisterRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            // A WhatsApp number, so a manager can reach a new owner the same day.
+            'phone' => ['required', 'string', 'regex:'.Phone::PATTERN],
             /*
              * `confirmed` expects a `password_confirmation` field. Length is
              * the only hard rule — the uncompromised check would call an
@@ -90,6 +93,10 @@ class RegisterRequest extends FormRequest
 
         if (is_string($this->email)) {
             $merge['email'] = mb_strtolower(trim($this->email));
+        }
+
+        if (is_string($this->phone)) {
+            $merge['phone'] = Phone::normalize($this->phone);
         }
 
         // Codes are minted uppercase; normalise so links are case-insensitive.

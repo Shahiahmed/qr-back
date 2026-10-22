@@ -23,9 +23,9 @@ class RegisterController extends Controller
     public function __invoke(RegisterRequest $request): JsonResponse
     {
         // referral_code in the payload is the INVITER's code, not a fillable
-        // column — create() only takes name/email/password (own code is minted
+        // column — create() only takes name/email/phone/password (own code is minted
         // in the model's creating hook).
-        $user = User::create($request->safe()->only(['name', 'email', 'password']));
+        $user = User::create($request->safe()->only(['name', 'email', 'phone', 'password']));
 
         // Bind the inviter (if the code resolves to a real, different owner) and
         // grant this new owner their welcome discount. Failures here must not

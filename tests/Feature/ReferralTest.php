@@ -14,6 +14,7 @@ function register(array $overrides = []): void
     test()->postJson('/api/register', [
         'name' => 'Owner',
         'email' => 'owner-'.fake()->unique()->numberBetween(1, 999999).'@vostok.kz',
+        'phone' => '+7 701 123 45 67',
         'password' => 'ploV-2490-tashkent',
         'password_confirmation' => 'ploV-2490-tashkent',
         'form_time' => 5000,

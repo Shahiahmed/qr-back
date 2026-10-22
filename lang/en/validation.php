@@ -182,6 +182,10 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+        'phone' => [
+            'required' => 'Enter your WhatsApp number.',
+            'regex' => 'Enter the full number, e.g. +7 701 123 45 67.',
+        ],
     ],
 
     /*
