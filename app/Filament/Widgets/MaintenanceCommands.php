@@ -32,6 +32,9 @@ class MaintenanceCommands extends Widget
 
     public ?string $lastOutput = null;
 
+    /** Tints the log panel red when the last command didn't exit cleanly. */
+    public bool $lastFailed = false;
+
     /** Apply any pending migrations. `--force` because prod is non-interactive. */
     public function runMigrate(): void
     {
@@ -110,6 +113,7 @@ class MaintenanceCommands extends Widget
 
             $this->lastLabel = $label;
             $this->lastOutput = $output === '' ? '(без вывода)' : $output;
+            $this->lastFailed = $exitCode !== 0;
 
             if ($exitCode === 0) {
                 Notification::make()->title($successTitle)->success()->send();
@@ -123,27 +127,36 @@ class MaintenanceCommands extends Widget
         } catch (\Throwable $e) {
             $this->lastLabel = $label;
             $this->lastOutput = $e->getMessage();
+            $this->lastFailed = true;
 
             Notification::make()->title('Ошибка выполнения')->body($e->getMessage())->danger()->send();
         }
     }
 
     /**
-     * Live health readout the buttons act on. Each row is
-     * [label, value, colour, ok?] — Blade renders them as badges.
+     * Live health readout the buttons act on, keyed so a command tile can
+     * flag itself as "needed" when its check isn't green.
      *
-     * @return array<int, array{label: string, value: string, color: string}>
+     * @return array<string, array{label: string, value: string, color: string}>
      */
     public function getChecks(): array
     {
         return [
-            $this->migrationsCheck(),
-            $this->storageLinkCheck(),
-            $this->plansCheck(),
-            $this->promoCheck(),
-            $this->referralCodesCheck(),
-            $this->webpCheck(),
+            'migrations' => $this->migrationsCheck(),
+            'storage' => $this->storageLinkCheck(),
+            'plans' => $this->plansCheck(),
+            'promo' => $this->promoCheck(),
+            'referral' => $this->referralCodesCheck(),
+            'webp' => $this->webpCheck(),
         ];
+    }
+
+    /** Hide the last command's log once the operator has read it. */
+    public function clearOutput(): void
+    {
+        $this->lastLabel = null;
+        $this->lastOutput = null;
+        $this->lastFailed = false;
     }
 
     /** @return array{label: string, value: string, color: string} */
