@@ -14,7 +14,7 @@ use Livewire\Livewire;
 /*
  * These pages read model attributes that are not DB columns (accessEndsAt,
  * daysLeft, isActive). Filament's summary/query pipeline is picky about that
- * (see CLAUDE.md §7 on modifyQueryUsing), so a plain render is the cheap guard.
+ * (see PROJECT.md §7 on modifyQueryUsing), so a plain render is the cheap guard.
  */
 
 beforeEach(function () {

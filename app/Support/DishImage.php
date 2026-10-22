@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
  * every upload is centre-cropped to a square and re-encoded to WebP with GD
  * before it touches disk. The owner-facing cropper already sends a square, but
  * we crop again here so the guarantee holds no matter what reaches the endpoint
- * (CLAUDE.md rule: shrink + resize, never serve the raw phone photo).
+ * (PROJECT.md rule: shrink + resize, never serve the raw phone photo).
  *
  * Mirrors VenueImage: the relative path is stored on the model, the public URL
  * is built in the resource, and a random filename per save busts caches.

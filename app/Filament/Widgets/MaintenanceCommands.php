@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Artisan;
 /**
  * Deploy/maintenance console for the platform operator: the handful of artisan
  * commands the project needs run by hand (migrate, storage:link, cache clear,
- * default plans) plus a live health readout. See CLAUDE.md §11 — these are
+ * default plans) plus a live health readout. See PROJECT.md §11 — these are
  * intentionally kept out of deploy.sh, so a one-tap button here beats SSH.
  *
  * Only a fixed whitelist runs; there is no free-form command input. Every action
@@ -57,7 +57,7 @@ class MaintenanceCommands extends Widget
      * Seed the default plans. Runs whatever the catalogue state — but the button
      * carries a loud confirm when plans already exist, because the seeder is
      * updateOrCreate and resets the *default* tiers' prices back to placeholders
-     * (CLAUDE.md §7/§11). `canSeedPlans()` only drives that warning copy now.
+     * (PROJECT.md §7/§11). `canSeedPlans()` only drives that warning copy now.
      */
     public function runSeedPlans(): void
     {

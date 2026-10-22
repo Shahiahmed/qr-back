@@ -3,14 +3,14 @@
 use App\Models\Plan;
 use Database\Seeders\PlanSeeder;
 
-it('seeds the free tier with the 3/5 content caps', function () {
+it('seeds the free tier with the 10/10 content caps', function () {
     (new PlanSeeder())->run();
 
     $free = Plan::where('name_ru', 'Бесплатный')->sole();
 
     expect($free->price)->toBe(0)
-        ->and($free->max_categories)->toBe(3)
-        ->and($free->max_dishes_per_category)->toBe(5);
+        ->and($free->max_categories)->toBe(10)
+        ->and($free->max_dishes_per_category)->toBe(10);
 });
 
 it('leaves the paid tiers without content caps', function () {

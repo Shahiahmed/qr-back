@@ -41,15 +41,15 @@ class PlanSeeder extends Seeder
                 'period' => 'month',
                 'features' => [
                     ['ru' => '1 меню на 1 месяц', 'kk' => '1 мәзір 1 айға'],
-                    ['ru' => 'До 3 разделов, 5 блюд в разделе', 'kk' => '3 бөлімге дейін, бөлімде 5 тағам'],
+                    ['ru' => 'До 10 разделов, 10 блюд в разделе', 'kk' => '10 бөлімге дейін, бөлімде 10 тағам'],
                     ['ru' => 'QR-код на стол', 'kk' => 'Үстелге QR-код'],
                 ],
                 'max_establishments' => 1,
                 // Content caps for the free tier — enforced server-side. The trial
                 // week shares them (falls back to this plan). Paid tiers leave
                 // these null (unlimited).
-                'max_categories' => 3,
-                'max_dishes_per_category' => 5,
+                'max_categories' => 10,
+                'max_dishes_per_category' => 10,
                 'is_active' => true,
                 'is_featured' => false,
                 'sort' => 1,

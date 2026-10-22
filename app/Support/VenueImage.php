@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
  * Processes and stores a venue's cover / logo upload.
  *
  * Uploads are downscaled and re-encoded to WebP with GD before they touch the
- * disk (the CLAUDE.md rule: shrink + resize, don't serve the raw phone photo).
+ * disk (the PROJECT.md rule: shrink + resize, don't serve the raw phone photo).
  * The relative path is what gets saved on the model; the public URL is built
  * from it in the resource. A random filename per save doubles as cache-busting —
  * the guest's browser and any CDN see a new URL the instant a photo changes.
