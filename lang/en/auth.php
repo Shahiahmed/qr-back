@@ -17,4 +17,5 @@ return [
     'password' => 'The provided password is incorrect.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
 
+    'bot' => 'The form could not be sent. Please press the button again.',
 ];

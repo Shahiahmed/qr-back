@@ -16,6 +16,7 @@ function register(array $overrides = []): void
         'email' => 'owner-'.fake()->unique()->numberBetween(1, 999999).'@vostok.kz',
         'password' => 'ploV-2490-tashkent',
         'password_confirmation' => 'ploV-2490-tashkent',
+        'form_time' => 5000,
         ...$overrides,
     ])->assertCreated();
 }

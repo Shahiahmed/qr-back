@@ -8,6 +8,8 @@ const VALID = [
     'email' => 'aigul@vostok.kz',
     'password' => 'ploV-2490-tashkent',
     'password_confirmation' => 'ploV-2490-tashkent',
+    // The page reports how long the form was open; see the bot trap below.
+    'form_time' => 5000,
 ];
 
 it('creates the account and signs it in', function () {
@@ -70,4 +72,36 @@ it('requires name, email and password', function () {
     $this->postJson('/api/register', [])
         ->assertStatus(422)
         ->assertJsonValidationErrors(['name', 'email', 'password']);
+});
+
+it('rejects a signup that filled the hidden honeypot field', function () {
+    $this->postJson('/api/register', [...VALID, 'contact_me_by_fax_only' => 'http://spam.example'])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('form');
+
+    expect(User::count())->toBe(0);
+});
+
+it('rejects a form submitted faster than a human could type it', function () {
+    $this->postJson('/api/register', [...VALID, 'form_time' => 400])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('form');
+
+    expect(User::count())->toBe(0);
+});
+
+it('rejects a direct API signup that skipped the page', function () {
+    $payload = VALID;
+    unset($payload['form_time']);
+
+    $this->postJson('/api/register', $payload)
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('form');
+
+    expect(User::count())->toBe(0);
+});
+
+it('lets a human through with an empty honeypot after a few seconds', function () {
+    $this->postJson('/api/register', [...VALID, 'contact_me_by_fax_only' => '', 'form_time' => 2500])
+        ->assertCreated();
 });

@@ -3,10 +3,24 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Validator;
 
 class RegisterRequest extends FormRequest
 {
+    /** Hidden field only a bot fills in — real visitors never see it. */
+    public const HONEYPOT = 'contact_me_by_fax_only';
+
+    /**
+     * Milliseconds the form was open before submit, reported by the page. A
+     * human needs a few seconds to type four fields; scripts post instantly
+     * or skip the page entirely and send no timing at all.
+     */
+    public const ELAPSED = 'form_time';
+
+    public const MIN_FORM_MS = 2000;
+
     /**
      * @return array<string, mixed>
      */
@@ -28,6 +42,45 @@ class RegisterRequest extends FormRequest
              * it after the account exists and simply ignores a miss.
              */
             'referral_code' => ['nullable', 'string', 'max:20'],
+        ];
+    }
+
+    /**
+     * Bot trap. Answers with one neutral form-level error rather than a silent
+     * fake success: a human who autofilled and clicked within two seconds just
+     * presses the button again (by then enough time has passed), while a bot
+     * learns nothing about which check tripped.
+     *
+     * @return array<int, callable>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator) {
+                $trap = $this->input(self::HONEYPOT);
+                $elapsed = $this->input(self::ELAPSED);
+
+                $reason = match (true) {
+                    filled($trap) => 'honeypot',
+                    ! is_numeric($elapsed) => 'no-timing',
+                    (int) $elapsed < self::MIN_FORM_MS => 'too-fast',
+                    default => null,
+                };
+
+                if ($reason === null) {
+                    return;
+                }
+
+                // Logged so we can tell later whether the trap actually catches
+                // the random-name signups — without storing the password.
+                Log::info('Signup rejected as bot', [
+                    'reason' => $reason,
+                    'email' => $this->input('email'),
+                    'ip' => $this->ip(),
+                ]);
+
+                $validator->errors()->add('form', __('auth.bot'));
+            },
         ];
     }
 
