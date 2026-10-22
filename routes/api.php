@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\CurrentUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\UpdatePasswordController;
+use App\Http\Controllers\Auth\UpdatePhoneController;
 use App\Http\Controllers\ApplyMenuStarterController;
 use App\Http\Controllers\DishController;
 use App\Http\Controllers\EstablishmentController;
@@ -86,6 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user', CurrentUserController::class)->name('user');
     Route::put('/user/password', UpdatePasswordController::class)->name('user.password');
+    Route::put('/user/phone', UpdatePhoneController::class)->name('user.phone');
 
     /*
      * Subscription: the owner's current tier and their applications. Approval
