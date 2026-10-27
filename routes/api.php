@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\UpdatePasswordController;
 use App\Http\Controllers\Auth\UpdatePhoneController;
 use App\Http\Controllers\ApplyMenuStarterController;
+use App\Http\Controllers\ContactRequestController;
 use App\Http\Controllers\DishController;
 use App\Http\Controllers\EstablishmentController;
 use App\Http\Controllers\MenuCategoryController;
@@ -68,6 +69,14 @@ Route::get('/seo', PublicSeoController::class)->name('public.seo');
  * saves the promo settings page in /admin.
  */
 Route::get('/promo', PublicPromoController::class)->name('public.promo');
+
+/*
+ * «Оставить заявку» from the landing's contact button. No auth; stored for the
+ * admin panel and pushed to the admin's Telegram. Bot-trapped in the request.
+ */
+Route::post('/contact-requests', ContactRequestController::class)
+    ->middleware('throttle:5,1')
+    ->name('public.contact-requests');
 
 /*
  * Auth for the admin panel. Sanctum runs in SPA mode, so these rely on the
