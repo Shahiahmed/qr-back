@@ -30,7 +30,7 @@ class EstablishmentsTable
         return $table
             // Counts + each venue's own grant in one query — no N+1 across the list.
             ->modifyQueryUsing(fn (Builder $query) => $query
-                ->withCount(['categories', 'dishes'])
+                ->withStarterCounts()
                 ->with(['user', 'currentSubscription']))
             ->columns([
                 TextColumn::make('name')
@@ -49,7 +49,10 @@ class EstablishmentsTable
                 TextColumn::make('menu')
                     ->label('Меню')
                     ->state(fn (Establishment $record): string => "{$record->categories_count} разд. · {$record->dishes_count} блюд")
-                    ->color('gray')
+                    // The auto-applied starter, never edited: the owner signed up
+                    // and stopped — worth a message.
+                    ->color(fn (Establishment $record): string => $record->isStarterUntouched() ? 'warning' : 'gray')
+                    ->description(fn (Establishment $record): ?string => $record->isStarterUntouched() ? 'шаблон не тронут' : null)
                     // Below 1280px the sidebar leaves too little room; the counts
                     // are on the venue page's tabs anyway.
                     ->visibleFrom('xl'),
@@ -91,7 +94,7 @@ class EstablishmentsTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->label('Создано')
-                    ->date('d.m.Y')
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->visibleFrom('xl')
                     ->toggleable(),
@@ -105,6 +108,15 @@ class EstablishmentsTable
                     ->falseLabel('Активные')
                     ->nullable()
                     ->attribute('blocked_at'),
+                TernaryFilter::make('starter')
+                    ->label('Меню')
+                    ->placeholder('Все')
+                    ->trueLabel('Шаблон не тронут')
+                    ->falseLabel('Своё меню')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereStarterUntouched(),
+                        false: fn (Builder $query) => $query->whereNot(fn (Builder $q) => $q->whereStarterUntouched()),
+                    ),
             ])
             ->recordActions([
                 ActionGroup::make([

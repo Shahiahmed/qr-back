@@ -13,6 +13,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\SubscriptionRequest;
 use App\Models\User;
+use App\Support\MenuStarter;
 use App\Support\PublicMenu;
 use App\Support\SubscriptionService;
 use Filament\Facades\Filament;
@@ -192,4 +193,57 @@ it('counts expiring menus on the stats widget', function () {
     Livewire::test(PlatformStats::class)
         ->assertOk()
         ->assertSee('Истекают за 7 дней');
+});
+
+/* ---------- untouched starter menus ---------- */
+
+function starterVenue(): Establishment
+{
+    $venue = Establishment::factory()->for(User::factory())->create();
+    MenuStarter::apply($venue);
+
+    return $venue;
+}
+
+it('filters venues whose starter menu was never edited', function () {
+    $idle = starterVenue();
+
+    $renamed = starterVenue();
+    $dish = $renamed->dishes()->first();
+    Carbon::setTestNow(now()->addMinute());
+    $dish->update(['name_ru' => 'Бешбармак']);
+    Carbon::setTestNow();
+
+    $swapped = starterVenue();
+    $swapped->dishes()->first()->delete();
+    Dish::factory()->create([
+        'establishment_id' => $swapped->id,
+        'menu_category_id' => $swapped->categories()->first()->id,
+        'name_ru' => 'Своё блюдо',
+    ]);
+
+    [$own] = venueWithMenu();
+
+    expect(Establishment::query()->whereStarterUntouched()->pluck('id')->all())->toBe([$idle->id]);
+
+    Livewire::test(ListEstablishments::class)
+        ->filterTable('starter', true)
+        ->assertCanSeeTableRecords([$idle])
+        ->assertCanNotSeeTableRecords([$renamed, $swapped, $own])
+        ->filterTable('starter', false)
+        ->assertCanSeeTableRecords([$renamed, $swapped, $own])
+        ->assertCanNotSeeTableRecords([$idle]);
+});
+
+it('marks an untouched starter in the menu column', function () {
+    $idle = starterVenue();
+    [$own] = venueWithMenu();
+
+    Livewire::test(ListEstablishments::class)
+        ->assertTableColumnStateSet('menu', '3 разд. · 8 блюд', $idle)
+        ->assertSee('шаблон не тронут');
+
+    $loaded = Establishment::query()->withStarterCounts()->findMany([$idle->id, $own->id])->keyBy('id');
+    expect($loaded[$idle->id]->isStarterUntouched())->toBeTrue()
+        ->and($loaded[$own->id]->isStarterUntouched())->toBeFalse();
 });

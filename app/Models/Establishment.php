@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\MenuStarter;
 use App\Support\PublicMenu;
 use Database\Factories\EstablishmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -321,6 +322,57 @@ class Establishment extends Model
         [$sql, $bindings] = self::accessEndSql();
 
         return $query->orderByRaw($sql.' '.($direction === 'desc' ? 'desc' : 'asc'), $bindings);
+    }
+
+    /**
+     * Venues whose menu is still exactly the auto-applied starter: same number
+     * of sections and dishes, every row carries a starter name, and none was
+     * ever saved again (renaming, re-pricing, a photo or a reorder all move
+     * `updated_at` past `created_at`). Lets the panel spot sign-ups that never
+     * started on their own menu.
+     */
+    public function scopeWhereStarterUntouched(Builder $query): Builder
+    {
+        $starter = MenuStarter::blueprint();
+
+        return $query
+            ->has('categories', '=', count($starter))
+            ->has('dishes', '=', count(MenuStarter::dishNames()))
+            ->whereDoesntHave('categories', fn (Builder $q) => self::whereEditedRow($q, MenuStarter::categoryNames()))
+            ->whereDoesntHave('dishes', fn (Builder $q) => self::whereEditedRow($q, MenuStarter::dishNames()));
+    }
+
+    /**
+     * Row-level twin of whereStarterUntouched() for list pages: loads the
+     * counts isStarterUntouched() reads, in the same single query.
+     */
+    public function scopeWithStarterCounts(Builder $query): Builder
+    {
+        return $query->withCount([
+            'categories',
+            'dishes',
+            'categories as edited_categories_count' => fn (Builder $q) => self::whereEditedRow($q, MenuStarter::categoryNames()),
+            'dishes as edited_dishes_count' => fn (Builder $q) => self::whereEditedRow($q, MenuStarter::dishNames()),
+        ]);
+    }
+
+    /** Needs withStarterCounts() on the query that loaded this venue. */
+    public function isStarterUntouched(): bool
+    {
+        // Cast: some MySQL PDO setups hand aggregates back as strings.
+        return (int) $this->categories_count === count(MenuStarter::blueprint())
+            && (int) $this->dishes_count === count(MenuStarter::dishNames())
+            && (int) $this->edited_categories_count === 0
+            && (int) $this->edited_dishes_count === 0;
+    }
+
+    /** @param  list<string>  $starterNames */
+    private static function whereEditedRow(Builder $query, array $starterNames): void
+    {
+        // Grouped: inside whereHas a bare orWhere would escape the venue join.
+        $query->where(fn (Builder $q) => $q
+            ->whereNotIn('name_ru', $starterNames)
+            ->orWhereColumn('updated_at', '!=', 'created_at'));
     }
 
     /** True once a Telegram chat is bound — staff notifications can be sent. */

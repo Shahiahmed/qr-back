@@ -53,6 +53,18 @@ final class MenuStarter
         return true;
     }
 
+    /** @return list<string> Russian section names the starter writes. */
+    public static function categoryNames(): array
+    {
+        return array_column(self::blueprint(), 'name_ru');
+    }
+
+    /** @return list<string> Russian dish names the starter writes. */
+    public static function dishNames(): array
+    {
+        return array_column(array_merge(...array_column(self::blueprint(), 'dishes')), 'name_ru');
+    }
+
     /**
      * @return list<array{
      *   name_ru: string,
