@@ -127,3 +127,23 @@ it('keeps venues closed to guests', function () {
     $this->getJson('/api/establishments')->assertUnauthorized();
     $this->postJson('/api/establishments', VENUE)->assertUnauthorized();
 });
+
+it('saves a service charge and treats zero as switched off', function () {
+    $venue = Establishment::factory()->for($this->owner)->create();
+
+    $this->patchJson("/api/establishments/{$venue->id}", ['service_charge_percent' => 12.5])
+        ->assertOk()
+        ->assertJsonPath('data.service_charge_percent', 12.5);
+
+    $this->patchJson("/api/establishments/{$venue->id}", ['service_charge_percent' => 0])
+        ->assertOk()
+        ->assertJsonPath('data.service_charge_percent', null);
+});
+
+it('rejects a service charge outside the allowed range', function (mixed $value) {
+    $venue = Establishment::factory()->for($this->owner)->create();
+
+    $this->patchJson("/api/establishments/{$venue->id}", ['service_charge_percent' => $value])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('service_charge_percent');
+})->with([31, -5, 10.25, 'много']);

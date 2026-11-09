@@ -37,6 +37,8 @@ class EstablishmentResource extends JsonResource
             'cover_url' => VenueImage::url($this->cover_path),
             'logo_url' => VenueImage::url($this->logo_path),
             'show_logo' => (bool) $this->show_logo,
+            // Percent added to the bill; null = no service charge.
+            'service_charge_percent' => $this->service_charge_percent,
             // Whether a Telegram chat is bound (enables waiter calls). The chat
             // id and link token are never exposed — only this boolean.
             'telegram_connected' => $this->telegramConnected(),

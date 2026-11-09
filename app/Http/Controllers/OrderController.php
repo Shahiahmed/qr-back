@@ -63,7 +63,7 @@ class OrderController extends Controller
         TelegramNotifier::notify(
             $establishment->telegram_chat_id,
             $this->message(
-                $establishment->currency,
+                $establishment,
                 $lines->all(),
                 $request->validated('table'),
                 $request->validated('comment'),
@@ -76,8 +76,9 @@ class OrderController extends Controller
     /**
      * @param  array<int, array{dish: \App\Models\Dish, qty: int}>  $lines
      */
-    private function message(string $currency, array $lines, ?string $table, ?string $comment): string
+    private function message(Establishment $establishment, array $lines, ?string $table, ?string $comment): string
     {
+        $currency = $establishment->currency;
         $text = '🧾 Новый заказ';
 
         if ($table !== null && trim($table) !== '') {
@@ -96,13 +97,30 @@ class OrderController extends Controller
             $text .= "\n• {$dish->name_ru} × {$qty} — " . $this->money($sum, $currency);
         }
 
-        $text .= "\n\nИтого: " . $this->money($total, $currency);
+        // The service charge is the venue's current percent, applied here on
+        // the server — the guest's phone only shows the same math.
+        $service = $establishment->serviceChargeFor($total);
+
+        if ($service > 0) {
+            $percent = $this->percent((float) $establishment->service_charge_percent);
+            $text .= "\n\nБлюда: " . $this->money($total, $currency);
+            $text .= "\nОбслуживание {$percent}%: " . $this->money($service, $currency);
+            $text .= "\nИтого: " . $this->money($total + $service, $currency);
+        } else {
+            $text .= "\n\nИтого: " . $this->money($total, $currency);
+        }
 
         if ($comment !== null && trim($comment) !== '') {
             $text .= "\n\nКомментарий: " . trim($comment);
         }
 
         return $text;
+    }
+
+    /** 10.0 → «10», 12.5 → «12,5». */
+    private function percent(float $value): string
+    {
+        return str_replace('.', ',', rtrim(rtrim(number_format($value, 1, '.', ''), '0'), '.'));
     }
 
     /** Minor units (тиыны) → a human amount for the staff message. */

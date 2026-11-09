@@ -133,3 +133,21 @@ it('throttles repeated orders per venue', function () {
 
     RateLimiter::clear("order:{$venue->id}");
 });
+
+it('adds the venue service charge to the order total', function () {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $venue = Establishment::factory()->create(['slug' => 'service', 'currency' => 'KZT']);
+    $venue->forceFill(['telegram_chat_id' => '1', 'service_charge_percent' => 12.5])->save();
+
+    $dish = Dish::factory()->for($venue)->create(['name_ru' => 'Лагман', 'price' => 245000]);
+
+    $this->postJson('/api/public/menu/service/order', [
+        'items' => [['dish_id' => $dish->id, 'qty' => 1]],
+    ])->assertOk();
+
+    // 2 450 × 12.5 % = 306.25 → rounded to a whole tenge.
+    Http::assertSent(fn ($request) => str_contains($request['text'], 'Блюда: 2 450 ₸')
+        && str_contains($request['text'], 'Обслуживание 12,5%: 306 ₸')
+        && str_contains($request['text'], 'Итого: 2 756 ₸'));
+});

@@ -45,6 +45,13 @@ class UpdateEstablishmentRequest extends FormRequest
             'theme' => ['sometimes', 'nullable', Rule::in(Establishment::THEMES)],
             'layout' => ['sometimes', 'nullable', Rule::in(Establishment::LAYOUTS)],
             'show_logo' => ['sometimes', 'boolean'],
+
+            // Percent added to the bill; null = no service charge. One decimal
+            // at most (12.5 %), capped so a typo can't triple the bill.
+            'service_charge_percent' => [
+                'sometimes', 'nullable', 'numeric', 'decimal:0,1',
+                'min:0.5', 'max:'.Establishment::MAX_SERVICE_CHARGE,
+            ],
         ];
     }
 
@@ -60,6 +67,11 @@ class UpdateEstablishmentRequest extends FormRequest
          * links somewhere instead of resolving against our own domain.
          * (Empty strings are already null by here — ConvertEmptyStringsToNull.)
          */
+        // «0 %» means the same as switched off — store null, not a zero charge.
+        if (is_numeric($this->input('service_charge_percent')) && (float) $this->input('service_charge_percent') == 0) {
+            $this->merge(['service_charge_percent' => null]);
+        }
+
         foreach (['instagram_url', 'facebook_url', 'tiktok_url'] as $field) {
             $value = $this->input($field);
 

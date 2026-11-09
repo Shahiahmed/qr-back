@@ -22,7 +22,7 @@ use Illuminate\Support\Str;
 #[Fillable([
     'name', 'slug', 'currency', 'default_locale', 'address', 'phone',
     'wifi_ssid', 'wifi_password', 'instagram_url', 'facebook_url', 'tiktok_url',
-    'theme', 'layout', 'show_logo',
+    'theme', 'layout', 'show_logo', 'service_charge_percent',
     // Set only by VenueImage (upload/remove), never from the update form.
     'cover_path', 'logo_path',
 ])]
@@ -80,6 +80,7 @@ class Establishment extends Model
             'trial_ends_at' => 'datetime',
             'blocked_at' => 'datetime',
             'show_logo' => 'boolean',
+            'service_charge_percent' => 'float',
         ];
     }
 
@@ -373,6 +374,26 @@ class Establishment extends Model
         $query->where(fn (Builder $q) => $q
             ->whereNotIn('name_ru', $starterNames)
             ->orWhereColumn('updated_at', '!=', 'created_at'));
+    }
+
+    /** Upper bound of the service charge an owner can set, in percent. */
+    public const MAX_SERVICE_CHARGE = 30;
+
+    /**
+     * Service charge on a bill of `$minor` (тиыны), rounded to a whole
+     * currency unit — guests and waiters never see tiyn. 0 when the venue
+     * doesn't charge one. The guest cart mirrors this rounding
+     * (`serviceChargeFor` on the front end), so keep the two in step.
+     */
+    public function serviceChargeFor(int $minor): int
+    {
+        $percent = (float) ($this->service_charge_percent ?? 0);
+
+        if ($percent <= 0) {
+            return 0;
+        }
+
+        return (int) round($minor * $percent / 10000) * 100;
     }
 
     /** True once a Telegram chat is bound — staff notifications can be sent. */
