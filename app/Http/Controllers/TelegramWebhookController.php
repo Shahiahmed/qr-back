@@ -24,6 +24,15 @@ class TelegramWebhookController extends Controller
     /** Telegram's own cap on a bot command's argument; ignore anything longer. */
     private const MAX_TOKEN = 64;
 
+    /** Reply to a /start without a valid token (bot opened by hand, or a stale link). */
+    // TODO(kk-review): казахская часть сообщения.
+    private const HOW_TO_BIND = "Чтобы подключить заведение, откройте кабинет на сайте → «Настройки» → "
+        ."«Подключить Telegram» и нажмите «Открыть Telegram». Просто найти бота и нажать «Старт» недостаточно.
+
+"
+        ."Мекемені қосу үшін сайттағы кабинетті ашыңыз → «Баптаулар» → «Telegram қосу», "
+        ."содан кейін «Telegram-ды ашу» түймесін басыңыз. Ботты өзіңіз тауып, «Старт» басу жеткіліксіз.";
+
     public function __invoke(Request $request, string $secret): JsonResponse
     {
         // Guard the path with the configured secret (constant-time compare).
@@ -38,8 +47,14 @@ class TelegramWebhookController extends Controller
         $text = trim((string) ($message['text'] ?? ''));
         $chatId = $message['chat']['id'] ?? null;
 
-        if ($chatId !== null && preg_match('/^\/start(?:@\w+)?\s+(\S+)$/', $text, $m)) {
-            $this->bind($m[1], (string) $chatId);
+        if ($chatId === null || ! preg_match('/^\/start(?:@\w+)?(?:\s+(\S+))?$/', $text, $m)) {
+            return response()->json(['ok' => true]);
+        }
+
+        // A bare /start means the owner found the bot by name instead of using
+        // the link from the cabinet — tell them how to bind instead of silence.
+        if (empty($m[1]) || ! $this->bind($m[1], (string) $chatId)) {
+            TelegramNotifier::notify((string) $chatId, self::HOW_TO_BIND);
         }
 
         return response()->json(['ok' => true]);
@@ -50,10 +65,10 @@ class TelegramWebhookController extends Controller
      * cleared on use, so a leaked deep link can't rebind later. Both columns are
      * out of #[Fillable]; written with forceFill in this trusted server path.
      */
-    private function bind(string $token, string $chatId): void
+    private function bind(string $token, string $chatId): bool
     {
         if (strlen($token) > self::MAX_TOKEN) {
-            return;
+            return false;
         }
 
         $establishment = Establishment::query()
@@ -61,7 +76,7 @@ class TelegramWebhookController extends Controller
             ->first();
 
         if (! $establishment) {
-            return;
+            return false;
         }
 
         $establishment->forceFill([
@@ -74,5 +89,7 @@ class TelegramWebhookController extends Controller
             $chatId,
             "✅ «{$establishment->name}» подключено. Сюда будут приходить вызовы официанта.",
         );
+
+        return true;
     }
 }

@@ -109,12 +109,36 @@ it('ignores the webhook when the path secret is wrong', function () {
 });
 
 it('ignores a /start with an unknown token', function () {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
     $this->postJson('/api/telegram/webhook/hook-secret', [
         'message' => ['chat' => ['id' => 1], 'text' => '/start nope'],
     ])->assertOk();
 
     // Nothing bound — no exception either.
     expect(Establishment::whereNotNull('telegram_chat_id')->count())->toBe(0);
+});
+
+it('explains how to bind when /start has no token', function () {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $this->postJson('/api/telegram/webhook/hook-secret', [
+        'message' => ['chat' => ['id' => 777], 'text' => '/start'],
+    ])->assertOk();
+
+    Http::assertSent(fn ($request) => $request['chat_id'] == '777'
+        && str_contains($request['text'], 'Подключить Telegram'));
+    expect(Establishment::whereNotNull('telegram_chat_id')->count())->toBe(0);
+});
+
+it('stays silent on ordinary chat messages', function () {
+    Http::fake();
+
+    $this->postJson('/api/telegram/webhook/hook-secret', [
+        'message' => ['chat' => ['id' => 777], 'text' => 'привет'],
+    ])->assertOk();
+
+    Http::assertNothingSent();
 });
 
 // --- Guest: call waiter -------------------------------------------------------
