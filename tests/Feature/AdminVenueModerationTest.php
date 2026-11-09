@@ -247,3 +247,21 @@ it('marks an untouched starter in the menu column', function () {
     expect($loaded[$idle->id]->isStarterUntouched())->toBeTrue()
         ->and($loaded[$own->id]->isStarterUntouched())->toBeFalse();
 });
+
+/* ---------- Telegram binding in the venues table ---------- */
+
+it('shows which venues have Telegram connected and filters by it', function () {
+    $connected = Establishment::factory()->for(User::factory())->create();
+    $connected->forceFill(['telegram_chat_id' => '123456789'])->save();
+    $silent = Establishment::factory()->for(User::factory())->create();
+
+    Livewire::test(ListEstablishments::class)
+        ->assertTableColumnStateSet('telegram', true, $connected)
+        ->assertTableColumnStateSet('telegram', false, $silent)
+        ->filterTable('telegram', true)
+        ->assertCanSeeTableRecords([$connected])
+        ->assertCanNotSeeTableRecords([$silent])
+        ->filterTable('telegram', false)
+        ->assertCanSeeTableRecords([$silent])
+        ->assertCanNotSeeTableRecords([$connected]);
+});

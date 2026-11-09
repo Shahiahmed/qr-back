@@ -12,6 +12,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -88,6 +89,19 @@ class EstablishmentsTable
                         ? 'с '.$record->blocked_at->format('d.m.Y')
                         : $record->accessEndsAt()?->format('d.m.Y'))
                     ->tooltip(fn (Establishment $record): ?string => $record->blocked_reason),
+                // Bound chat = waiter calls and orders reach the staff. An empty
+                // one is a nudge-worthy owner (the "⋯ → WhatsApp" action is right there).
+                IconColumn::make('telegram')
+                    ->label('Telegram')
+                    ->state(fn (Establishment $record): bool => filled($record->telegram_chat_id))
+                    ->boolean()
+                    ->trueIcon(Heroicon::OutlinedCheckCircle)
+                    ->falseIcon(Heroicon::OutlinedMinusCircle)
+                    ->falseColor('gray')
+                    ->tooltip(fn (Establishment $record): string => filled($record->telegram_chat_id)
+                        ? 'Telegram подключён: вызовы и заказы приходят персоналу'
+                        : 'Telegram не подключён')
+                    ->alignCenter(),
                 TextColumn::make('theme')
                     ->label('Тема')
                     ->badge()
@@ -108,6 +122,13 @@ class EstablishmentsTable
                     ->falseLabel('Активные')
                     ->nullable()
                     ->attribute('blocked_at'),
+                TernaryFilter::make('telegram')
+                    ->label('Telegram')
+                    ->placeholder('Все')
+                    ->trueLabel('Подключён')
+                    ->falseLabel('Не подключён')
+                    ->nullable()
+                    ->attribute('telegram_chat_id'),
                 TernaryFilter::make('starter')
                     ->label('Меню')
                     ->placeholder('Все')
