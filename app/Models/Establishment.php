@@ -22,7 +22,7 @@ use Illuminate\Support\Str;
 #[Fillable([
     'name', 'slug', 'currency', 'default_locale', 'address', 'phone',
     'wifi_ssid', 'wifi_password', 'instagram_url', 'facebook_url', 'tiktok_url',
-    'theme', 'layout', 'show_logo', 'service_charge_percent',
+    'theme', 'layout', 'show_logo', 'show_search', 'service_charge_percent',
     // Set only by VenueImage (upload/remove), never from the update form.
     'cover_path', 'logo_path',
 ])]
@@ -80,6 +80,7 @@ class Establishment extends Model
             'trial_ends_at' => 'datetime',
             'blocked_at' => 'datetime',
             'show_logo' => 'boolean',
+            'show_search' => 'boolean',
             'service_charge_percent' => 'float',
         ];
     }

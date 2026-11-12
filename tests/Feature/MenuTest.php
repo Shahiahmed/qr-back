@@ -227,6 +227,19 @@ it('toggles whether the guest cover shows the logo', function () {
     ])->assertOk()->assertJsonPath('data.show_logo', true);
 });
 
+it('shows the dish search by default and lets the owner hide it', function () {
+    $this->getJson("/api/public/menu/{$this->venue->slug}")
+        ->assertOk()->assertJsonPath('data.show_search', true);
+
+    $this->patchJson("/api/establishments/{$this->venue->id}", [
+        'show_search' => false,
+    ])->assertOk()->assertJsonPath('data.show_search', false);
+
+    expect($this->venue->fresh()->show_search)->toBeFalse();
+    $this->getJson("/api/public/menu/{$this->venue->slug}")
+        ->assertOk()->assertJsonPath('data.show_search', false);
+});
+
 it('rejects an unknown menu layout', function () {
     $this->patchJson("/api/establishments/{$this->venue->id}", [
         'layout' => 'hologram',

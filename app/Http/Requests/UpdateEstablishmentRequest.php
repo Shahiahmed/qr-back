@@ -45,6 +45,7 @@ class UpdateEstablishmentRequest extends FormRequest
             'theme' => ['sometimes', 'nullable', Rule::in(Establishment::THEMES)],
             'layout' => ['sometimes', 'nullable', Rule::in(Establishment::LAYOUTS)],
             'show_logo' => ['sometimes', 'boolean'],
+            'show_search' => ['sometimes', 'boolean'],
 
             // Percent added to the bill; null = no service charge. One decimal
             // at most (12.5 %), capped so a typo can't triple the bill.

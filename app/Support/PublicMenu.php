@@ -95,6 +95,7 @@ class PublicMenu
             'cover_url' => VenueImage::coverUrl($establishment->cover_path),
             'logo_url' => VenueImage::url($establishment->logo_path),
             'show_logo' => (bool) $establishment->show_logo,
+            'show_search' => $establishment->show_search !== false,
             // Shown in the header and added to the cart total; null = none.
             'service_charge_percent' => $establishment->service_charge_percent,
             // Show the guest "call waiter" button only when a chat is bound.

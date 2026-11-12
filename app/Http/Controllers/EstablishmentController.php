@@ -24,6 +24,8 @@ class EstablishmentController extends Controller
             // Each venue's own live grant drives its access window and content
             // caps — load the grant and its plan once, no N+1 across the list.
             ->with('currentSubscription.plan')
+            // The overview flags venues whose menu is still empty.
+            ->withCount('dishes')
             ->latest('id')
             ->get();
 

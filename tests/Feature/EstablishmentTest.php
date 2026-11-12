@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Dish;
 use App\Models\Establishment;
+use App\Models\MenuCategory;
 use App\Models\User;
 
 const VENUE = [
@@ -33,6 +35,18 @@ it('lists only the venues that belong to the caller', function () {
 
     expect($response->json('data'))->toHaveCount(1)
         ->and($response->json('data.0.slug'))->toBe('mine');
+});
+
+it('reports how many dishes each listed venue has', function () {
+    $full = Establishment::factory()->for($this->owner)->create(['slug' => 'full']);
+    Establishment::factory()->for($this->owner)->create(['slug' => 'empty']);
+    $category = MenuCategory::factory()->create(['establishment_id' => $full->id]);
+    Dish::factory()->count(2)->create(['establishment_id' => $full->id, 'menu_category_id' => $category->id]);
+
+    $data = collect($this->getJson('/api/establishments')->assertOk()->json('data'))->keyBy('slug');
+
+    expect($data['full']['dishes_count'])->toBe(2)
+        ->and($data['empty']['dishes_count'])->toBe(0);
 });
 
 it('hides another owner\'s venue behind a 404 rather than a 403', function () {
